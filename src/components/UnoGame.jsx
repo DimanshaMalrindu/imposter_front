@@ -303,111 +303,213 @@ const UnoGame = ({
             <div
               style={{
                 display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+                gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
                 gap: "1rem",
               }}
             >
               {team.players
                 .filter((p) => p.id !== playerId)
-                .map((player) => (
-                  <div
-                    key={player.id}
-                    style={{
-                      padding: "1rem",
-                      background:
-                        player.id === team.currentTurn
-                          ? "rgba(245, 158, 11, 0.2)"
-                          : "rgba(255, 255, 255, 0.05)",
-                      borderRadius: "12px",
-                      border: `2px solid ${
-                        player.id === team.currentTurn
-                          ? "#f59e0b"
-                          : "rgba(255, 255, 255, 0.1)"
-                      }`,
-                    }}
-                  >
-                    <p
-                      style={{
-                        fontSize: "1.1rem",
-                        fontWeight: "bold",
-                        marginBottom: "0.5rem",
-                      }}
-                    >
-                      {player.name}
-                    </p>
+                .map((player) => {
+                  const cardCount = player.hand.length;
+                  const displayCards = Math.min(cardCount, 5);
+                  const remainingCards = cardCount - 5;
+
+                  // Generate avatar based on player name
+                  const avatarEmojis = [
+                    "👤",
+                    "👨",
+                    "👩",
+                    "🧑",
+                    "👱",
+                    "👴",
+                    "👵",
+                    "🧔",
+                    "🧓",
+                  ];
+                  const avatarIndex =
+                    player.name.charCodeAt(0) % avatarEmojis.length;
+                  const avatar = avatarEmojis[avatarIndex];
+
+                  return (
                     <div
+                      key={player.id}
                       style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "0.5rem",
-                        marginBottom: "0.5rem",
-                      }}
-                    >
-                      <span style={{ fontSize: "1.5rem" }}>🃏</span>
-                      <span style={{ fontSize: "1rem" }}>
-                        {player.hand.length} cards
-                      </span>
-                    </div>
-
-                    {/* Always show catch button */}
-                    <motion.button
-                      className="btn"
-                      style={{
-                        width: "100%",
+                        padding: "1rem",
                         background:
-                          player.hand.length === 1 &&
-                          (player.failedToCallUno || !player.hasCalledUno)
-                            ? "#ef4444"
-                            : "rgba(255, 255, 255, 0.2)",
-                        fontSize: "0.9rem",
-                        padding: "0.5rem",
-                        marginBottom: "0.5rem",
-                        cursor:
-                          player.hand.length === 1 &&
-                          (player.failedToCallUno || !player.hasCalledUno)
-                            ? "pointer"
-                            : "not-allowed",
+                          player.id === team.currentTurn
+                            ? "rgba(245, 158, 11, 0.2)"
+                            : "rgba(255, 255, 255, 0.05)",
+                        borderRadius: "12px",
+                        border: `2px solid ${
+                          player.id === team.currentTurn
+                            ? "#f59e0b"
+                            : "rgba(255, 255, 255, 0.1)"
+                        }`,
                       }}
-                      onClick={() => handleCatchPlayer(player.id)}
-                      disabled={
-                        !(
-                          player.hand.length === 1 &&
-                          (player.failedToCallUno || !player.hasCalledUno)
-                        )
-                      }
-                      whileHover={
-                        player.hand.length === 1 &&
-                        (player.failedToCallUno || !player.hasCalledUno)
-                          ? { scale: 1.05 }
-                          : {}
-                      }
-                      whileTap={
-                        player.hand.length === 1 &&
-                        (player.failedToCallUno || !player.hasCalledUno)
-                          ? { scale: 0.95 }
-                          : {}
-                      }
                     >
-                      🚨 Catch
-                    </motion.button>
-
-                    {player.hasCalledUno && (
+                      {/* Player Avatar and Name */}
                       <div
                         style={{
-                          background: "rgba(245, 158, 11, 0.2)",
-                          padding: "0.5rem",
-                          borderRadius: "8px",
-                          textAlign: "center",
-                          fontSize: "0.9rem",
-                          color: "#f59e0b",
-                          fontWeight: "bold",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "0.75rem",
+                          marginBottom: "1rem",
                         }}
                       >
-                        ✅ UNO!
+                        <div
+                          style={{
+                            width: "50px",
+                            height: "50px",
+                            borderRadius: "50%",
+                            background:
+                              "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            fontSize: "1.8rem",
+                            border: "3px solid rgba(255, 255, 255, 0.3)",
+                          }}
+                        >
+                          {avatar}
+                        </div>
+                        <div style={{ flex: 1 }}>
+                          <p
+                            style={{
+                              fontSize: "1.1rem",
+                              fontWeight: "bold",
+                              marginBottom: "0.2rem",
+                            }}
+                          >
+                            {player.name}
+                          </p>
+                          <p
+                            style={{
+                              fontSize: "0.85rem",
+                              color: "var(--text-secondary)",
+                            }}
+                          >
+                            {cardCount} {cardCount === 1 ? "card" : "cards"}
+                          </p>
+                        </div>
                       </div>
-                    )}
-                  </div>
-                ))}
+
+                      {/* Face-down cards display */}
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "0.3rem",
+                          marginBottom: "1rem",
+                          minHeight: "60px",
+                          padding: "0.5rem",
+                          background: "rgba(0, 0, 0, 0.2)",
+                          borderRadius: "8px",
+                          overflowX: "auto",
+                        }}
+                      >
+                        {/* Show up to 5 cards */}
+                        {[...Array(displayCards)].map((_, index) => (
+                          <div
+                            key={index}
+                            style={{
+                              minWidth: "35px",
+                              width: "35px",
+                              height: "50px",
+                              background:
+                                "linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%)",
+                              borderRadius: "4px",
+                              border: "2px solid rgba(255, 255, 255, 0.3)",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              fontSize: "1.2rem",
+                              boxShadow: "0 2px 4px rgba(0, 0, 0, 0.3)",
+                            }}
+                          >
+                            🃏
+                          </div>
+                        ))}
+
+                        {/* Show +N if more than 5 cards */}
+                        {remainingCards > 0 && (
+                          <div
+                            style={{
+                              minWidth: "35px",
+                              padding: "0 0.5rem",
+                              height: "50px",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              fontSize: "1rem",
+                              fontWeight: "bold",
+                              color: "#f59e0b",
+                            }}
+                          >
+                            +{remainingCards}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Always show catch button */}
+                      <motion.button
+                        className="btn"
+                        style={{
+                          width: "100%",
+                          background:
+                            player.hand.length === 1 &&
+                            (player.failedToCallUno || !player.hasCalledUno)
+                              ? "#ef4444"
+                              : "rgba(255, 255, 255, 0.2)",
+                          fontSize: "0.9rem",
+                          padding: "0.5rem",
+                          marginBottom: "0.5rem",
+                          cursor:
+                            player.hand.length === 1 &&
+                            (player.failedToCallUno || !player.hasCalledUno)
+                              ? "pointer"
+                              : "not-allowed",
+                        }}
+                        onClick={() => handleCatchPlayer(player.id)}
+                        disabled={
+                          !(
+                            player.hand.length === 1 &&
+                            (player.failedToCallUno || !player.hasCalledUno)
+                          )
+                        }
+                        whileHover={
+                          player.hand.length === 1 &&
+                          (player.failedToCallUno || !player.hasCalledUno)
+                            ? { scale: 1.05 }
+                            : {}
+                        }
+                        whileTap={
+                          player.hand.length === 1 &&
+                          (player.failedToCallUno || !player.hasCalledUno)
+                            ? { scale: 0.95 }
+                            : {}
+                        }
+                      >
+                        🚨 Catch
+                      </motion.button>
+
+                      {player.hasCalledUno && (
+                        <div
+                          style={{
+                            background: "rgba(245, 158, 11, 0.2)",
+                            padding: "0.5rem",
+                            borderRadius: "8px",
+                            textAlign: "center",
+                            fontSize: "0.9rem",
+                            color: "#f59e0b",
+                            fontWeight: "bold",
+                          }}
+                        >
+                          ✅ UNO!
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
             </div>
           </div>
         )}
