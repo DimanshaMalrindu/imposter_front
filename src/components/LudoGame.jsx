@@ -17,6 +17,9 @@ const LudoGame = ({
 }) => {
   const [selectedPawn, setSelectedPawn] = useState(null);
   const [skipCountdown, setSkipCountdown] = useState(null);
+  const [diceWarning, setDiceWarning] = useState(false);
+  const [playAlarm, setPlayAlarm] = useState(false);
+  const alarmAudioRef = React.useRef(null);
 
   if (!team) return null;
 
@@ -80,6 +83,56 @@ const LudoGame = ({
     }
   }, [isMyTurn, team.diceValue, hasValidMoves, onSkipTurn]);
 
+  // Track inactivity on dice roll
+  useEffect(() => {
+    if (isMyTurn && !team.diceValue) {
+      // Reset warning and alarm states
+      setDiceWarning(false);
+      setPlayAlarm(false);
+
+      // Set timer for 5 seconds - show red warning
+      const warningTimer = setTimeout(() => {
+        setDiceWarning(true);
+      }, 5000);
+
+      // Set timer for 10 seconds - play alarm
+      const alarmTimer = setTimeout(() => {
+        setPlayAlarm(true);
+      }, 10000);
+
+      return () => {
+        clearTimeout(warningTimer);
+        clearTimeout(alarmTimer);
+        setDiceWarning(false);
+        setPlayAlarm(false);
+      };
+    } else {
+      setDiceWarning(false);
+      setPlayAlarm(false);
+    }
+  }, [isMyTurn, team.diceValue]);
+
+  // Handle alarm sound
+  useEffect(() => {
+    if (playAlarm && alarmAudioRef.current) {
+      alarmAudioRef.current.volume = 0.5; // Set volume to 50%
+      alarmAudioRef.current.loop = true;
+      alarmAudioRef.current
+        .play()
+        .catch((e) => console.error("Alarm play error:", e));
+    } else if (alarmAudioRef.current) {
+      alarmAudioRef.current.pause();
+      alarmAudioRef.current.currentTime = 0;
+    }
+
+    return () => {
+      if (alarmAudioRef.current) {
+        alarmAudioRef.current.pause();
+        alarmAudioRef.current.currentTime = 0;
+      }
+    };
+  }, [playAlarm]);
+
   return (
     <div className="container" style={{ paddingTop: "6rem" }}>
       {/* Branding Header */}
@@ -132,27 +185,6 @@ const LudoGame = ({
           </h2>
         </div>
 
-        {/* No Valid Moves Warning */}
-        {skipCountdown !== null && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            style={{
-              padding: "1rem",
-              background: "rgba(239, 68, 68, 0.2)",
-              border: "2px solid #ef4444",
-              borderRadius: "12px",
-              marginBottom: "1rem",
-              textAlign: "center",
-              color: "#ef4444",
-              fontSize: "1.2rem",
-              fontWeight: "bold",
-            }}
-          >
-            ⚠️ No valid moves available! Skipping turn in {skipCountdown}...
-          </motion.div>
-        )}
-
         {/* Dice Section - Roll Button or Dice Value */}
         <div
           style={{
@@ -167,19 +199,31 @@ const LudoGame = ({
               className="btn btn-primary"
               style={{
                 background: isMyTurn
-                  ? "linear-gradient(135deg, #10b981, #059669)"
+                  ? diceWarning
+                    ? "linear-gradient(135deg, #ef4444, #dc2626)"
+                    : "linear-gradient(135deg, #10b981, #059669)"
                   : "rgba(100, 100, 100, 0.5)",
                 fontSize: "1.5rem",
                 padding: "1.5rem 3rem",
                 cursor: isMyTurn ? "pointer" : "not-allowed",
+                boxShadow:
+                  diceWarning && isMyTurn
+                    ? "0 0 20px rgba(239, 68, 68, 0.8)"
+                    : "none",
               }}
               onClick={handleRollDice}
               disabled={!isMyTurn}
               whileHover={isMyTurn ? { scale: 1.05 } : {}}
               whileTap={isMyTurn ? { scale: 0.95 } : {}}
-              animate={isMyTurn ? { y: [0, -8, 0] } : {}}
+              animate={
+                isMyTurn
+                  ? diceWarning
+                    ? { y: [0, -8, 0], scale: [1, 1.05, 1] }
+                    : { y: [0, -8, 0] }
+                  : {}
+              }
               transition={{
-                duration: 0.8,
+                duration: diceWarning ? 0.4 : 0.8,
                 repeat: Infinity,
                 ease: "easeInOut",
               }}
@@ -281,6 +325,14 @@ const LudoGame = ({
         team={team}
         activeSpeakers={activeSpeakers}
       />
+
+      {/* Alarm sound for dice roll timeout */}
+      <audio ref={alarmAudioRef} preload="auto" style={{ display: "none" }}>
+        <source
+          src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3"
+          type="audio/mpeg"
+        />
+      </audio>
     </div>
   );
 };
