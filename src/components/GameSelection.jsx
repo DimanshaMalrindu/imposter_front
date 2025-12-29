@@ -77,7 +77,7 @@ const GameSelection = ({ onSelectGame }) => {
       name: "UNO",
       icon: "🃏",
       color: "#f59e0b",
-      status: "Available",
+      status: "Coming Soon",
       launchDate: unoLaunchDate,
     },
     {
