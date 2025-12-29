@@ -231,10 +231,8 @@ const LudoBoard = ({ team, playerId, onPawnClick, isGameStarted }) => {
           }}
           whileHover={canMove ? { scale: 1.3 } : {}}
           whileTap={canMove ? { scale: 0.9 } : {}}
-          animate={canMove ? { scale: [1, 1.1, 1] } : {}}
-          transition={{ duration: 0.6, repeat: Infinity }}
         >
-          ♟
+          {isMyPawn ? '♞' : '♟'}
         </motion.div>
       </div>
     );
@@ -344,14 +342,8 @@ const LudoBoard = ({ team, playerId, onPawnClick, isGameStarted }) => {
                       ? { scale: 1.2 }
                       : {}
                   }
-                  animate={
-                    isGameStarted && team.currentTurn === pawnData.player.id
-                      ? { y: [0, -4, 0] }
-                      : {}
-                  }
-                  transition={{ duration: 0.6, repeat: Infinity }}
                 >
-                  ♟
+                  {pawnData.player.id === playerId ? '♞' : '♟'}
                 </motion.div>
               ) : (
                 <div
@@ -458,9 +450,13 @@ const LudoBoard = ({ team, playerId, onPawnClick, isGameStarted }) => {
               cellShadow =
                 "inset 0 3px 6px rgba(245,158,11,0.3), inset 0 -2px 4px rgba(255,255,255,0.6)";
             } else if (cell.type === "home-stretch") {
-              bgColor = `linear-gradient(145deg, ${colors[cell.color]}ee, ${colors[cell.color]}cc)`;
+              bgColor = `linear-gradient(145deg, ${colors[cell.color]}ee, ${
+                colors[cell.color]
+              }cc)`;
               borderColor = colors[cell.color];
-              cellShadow = `inset 0 2px 6px rgba(0,0,0,0.15), inset 0 -2px 4px rgba(255,255,255,0.4), 0 1px 3px ${colors[cell.color]}60`;
+              cellShadow = `inset 0 2px 6px rgba(0,0,0,0.15), inset 0 -2px 4px rgba(255,255,255,0.4), 0 1px 3px ${
+                colors[cell.color]
+              }60`;
             } else if (cell.type === "center") {
               bgColor = "linear-gradient(145deg, #fbbf24, #f59e0b)";
               borderColor = "#dc2626";

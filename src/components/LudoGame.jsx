@@ -126,92 +126,10 @@ const LudoGame = ({
               background: "linear-gradient(135deg, #10b981, #059669)",
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "1rem",
             }}
           >
             🎲 Ludo Game in Progress
-            {myPlayer && (
-              <span
-                style={{
-                  fontSize: "1.2rem",
-                  background: colorStyles[myPlayer.color].bg,
-                  color: colorStyles[myPlayer.color].text,
-                  border: `2px solid ${colorStyles[myPlayer.color].border}`,
-                  padding: "0.5rem 1rem",
-                  borderRadius: "8px",
-                  fontWeight: "bold",
-                }}
-              >
-                You: {myPlayer.color.toUpperCase()}
-              </span>
-            )}
           </h2>
-        </div>
-
-        {/* Current Turn */}
-        <div
-          style={{
-            padding: "1.5rem",
-            background: currentPlayer
-              ? colorStyles[currentPlayer.color].bg
-              : "rgba(255, 255, 255, 0.1)",
-            borderRadius: "12px",
-            marginBottom: "2rem",
-            textAlign: "center",
-            border: `2px solid ${
-              currentPlayer
-                ? colorStyles[currentPlayer.color].border
-                : "rgba(255, 255, 255, 0.3)"
-            }`,
-          }}
-        >
-          <p style={{ fontSize: "1rem", color: "var(--text-secondary)" }}>
-            Current Turn
-          </p>
-          <p
-            style={{
-              fontSize: "1.5rem",
-              fontWeight: "bold",
-              color: currentPlayer
-                ? colorStyles[currentPlayer.color].text
-                : "white",
-            }}
-          >
-            {currentPlayer?.name} ({currentPlayer?.color.toUpperCase()})
-          </p>
-          {isMyTurn && (
-            <p
-              style={{
-                fontSize: "1rem",
-                color: "var(--success-color)",
-                marginTop: "0.5rem",
-              }}
-            >
-              🎯 It's your turn!
-            </p>
-          )}
-
-          {/* Show dice value in current turn area */}
-          {team.diceValue && (
-            <motion.div
-              initial={{ scale: 0, rotate: -180 }}
-              animate={{ scale: 1, rotate: 0 }}
-              style={{
-                marginTop: "1rem",
-                fontSize: "3rem",
-                background: "linear-gradient(135deg, #10b981, #059669)",
-                borderRadius: "12px",
-                padding: "1rem",
-                display: "inline-block",
-                boxShadow: "0 8px 20px rgba(16, 185, 129, 0.3)",
-              }}
-            >
-              🎲 {team.diceValue}
-            </motion.div>
-          )}
         </div>
 
         {/* No Valid Moves Warning */}
@@ -235,16 +153,16 @@ const LudoGame = ({
           </motion.div>
         )}
 
-        {/* Dice Section - Roll Button */}
-        {!team.diceValue && (
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "center",
-              gap: "1rem",
-              marginBottom: "2rem",
-            }}
-          >
+        {/* Dice Section - Roll Button or Dice Value */}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            gap: "1rem",
+            marginBottom: "2rem",
+          }}
+        >
+          {!team.diceValue ? (
             <motion.button
               className="btn btn-primary"
               style={{
@@ -259,11 +177,38 @@ const LudoGame = ({
               disabled={!isMyTurn}
               whileHover={isMyTurn ? { scale: 1.05 } : {}}
               whileTap={isMyTurn ? { scale: 0.95 } : {}}
+              animate={isMyTurn ? { y: [0, -8, 0] } : {}}
+              transition={{ duration: 0.8, repeat: Infinity, ease: "easeInOut" }}
             >
-              🎲 Roll Dice
+              {isMyTurn ? "🎲 Roll Dice" : `⏳ ${currentPlayer?.name}'s turn...`}
             </motion.button>
-          </div>
-        )}
+          ) : (
+            <motion.div
+              initial={{ scale: 0, rotate: -180 }}
+              animate={{ scale: 1, rotate: 0 }}
+              style={{
+                fontSize: "1.5rem",
+                background: isMyTurn 
+                  ? "linear-gradient(135deg, #10b981, #059669)"
+                  : "var(--card-bg)",
+                borderRadius: "12px",
+                padding: "1.5rem 3rem",
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                boxShadow: isMyTurn 
+                  ? "0 8px 20px rgba(16, 185, 129, 0.3)"
+                  : "0 8px 20px rgba(0, 0, 0, 0.3)",
+                color: "white",
+                fontWeight: "bold",
+                minWidth: "200px",
+                border: isMyTurn ? "none" : "1px solid var(--border-color)",
+              }}
+            >
+              {isMyTurn ? `🎲 ${team.diceValue}` : `${currentPlayer?.name} rolled: ${team.diceValue}`}
+            </motion.div>
+          )}
+        </div>
 
         {/* Ludo Board */}
         <div style={{ marginBottom: "2rem" }}>
