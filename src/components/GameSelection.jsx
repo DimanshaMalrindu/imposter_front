@@ -1,21 +1,84 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 
+const CountdownTimer = ({ targetDate }) => {
+  const [timeLeft, setTimeLeft] = useState("");
+
+  useEffect(() => {
+    const calculateTimeLeft = () => {
+      const now = new Date();
+      const difference = targetDate - now;
+
+      if (difference <= 0) {
+        return "Available Now!";
+      }
+
+      const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+      const hours = Math.floor(
+        (difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+      );
+      const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+
+      if (days > 0) {
+        return `${days}d ${hours}h ${minutes}m ${seconds}s`;
+      } else if (hours > 0) {
+        return `${hours}h ${minutes}m ${seconds}s`;
+      } else {
+        return `${minutes}m ${seconds}s`;
+      }
+    };
+
+    setTimeLeft(calculateTimeLeft());
+
+    const timer = setInterval(() => {
+      setTimeLeft(calculateTimeLeft());
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [targetDate]);
+
+  return (
+    <div
+      style={{
+        fontSize: "0.85rem",
+        color: "var(--text-secondary)",
+        marginTop: "0.5rem",
+        fontWeight: "500",
+      }}
+    >
+      ⏰ {timeLeft}
+    </div>
+  );
+};
+
 const GameSelection = ({ onSelectGame }) => {
+  // Get today's date and set specific launch times
+  const today = new Date();
+
+  // Ludo: Today at midnight (12:00 AM)
+  const ludoLaunchDate = new Date(today);
+  ludoLaunchDate.setHours(24, 0, 0, 0); // Next midnight
+
+  // UNO: January 1st at 11 AM
+  const unoLaunchDate = new Date(2026, 0, 1, 11, 35, 13, 27); // Month is 0-indexed
+
   const games = [
     {
       id: "ludo",
       name: "Ludo",
       icon: "🎲",
       color: "#10b981",
-      status: "Coming Soon",
+      status: "Coming soon",
+      launchDate: ludoLaunchDate,
     },
     {
       id: "uno",
       name: "UNO",
       icon: "🃏",
       color: "#f59e0b",
-      status: "Coming Soon",
+      status: "Coming soon",
+      launchDate: unoLaunchDate,
     },
     {
       id: "imposter",
@@ -25,6 +88,16 @@ const GameSelection = ({ onSelectGame }) => {
       status: "Available",
     },
   ];
+
+  // Sort games: Available first (alphabetically), then Coming Soon (alphabetically)
+  const sortedGames = [...games].sort((a, b) => {
+    // If both have the same status, sort alphabetically by name
+    if (a.status === b.status) {
+      return a.name.localeCompare(b.name);
+    }
+    // Available games come before Coming Soon games
+    return a.status === "Available" ? -1 : 1;
+  });
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -75,7 +148,7 @@ const GameSelection = ({ onSelectGame }) => {
         </motion.div>
 
         <motion.div className="games-grid" variants={itemVariants}>
-          {games.map((game) => (
+          {sortedGames.map((game) => (
             <motion.div
               key={game.id}
               className={`game-card ${
@@ -106,6 +179,9 @@ const GameSelection = ({ onSelectGame }) => {
               >
                 {game.status}
               </div>
+              {game.status === "Coming soon" && game.launchDate && (
+                <CountdownTimer targetDate={game.launchDate} />
+              )}
             </motion.div>
           ))}
         </motion.div>
