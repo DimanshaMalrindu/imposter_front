@@ -115,7 +115,7 @@ const UnoGame = ({
   };
 
   return (
-    <div className="container">
+    <div className="container" style={{ paddingTop: "6rem" }}>
       {/* Branding Header */}
       <div
         className="branding-header"

@@ -89,7 +89,14 @@ const Game = ({
       </div>
       <div
         className="container"
-        style={{ padding: "1rem", maxHeight: "100vh", overflow: "hidden" }}
+        style={{
+          paddingTop: "6rem",
+          paddingLeft: "1rem",
+          paddingRight: "1rem",
+          paddingBottom: "1rem",
+          maxHeight: "100vh",
+          overflow: "auto",
+        }}
       >
         <motion.div
           className="card"

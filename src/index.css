@@ -70,8 +70,10 @@ body {
   max-width: 1200px;
   margin: 0 auto;
   padding: 2rem;
+  padding-top: 6rem;
   position: relative;
   z-index: 1;
+  min-height: 100vh;
 }
 
 /* Card styles */

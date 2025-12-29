@@ -81,7 +81,7 @@ const LudoGame = ({
   }, [isMyTurn, team.diceValue, hasValidMoves, onSkipTurn]);
 
   return (
-    <div className="container">
+    <div className="container" style={{ paddingTop: "6rem" }}>
       {/* Branding Header */}
       <div
         className="branding-header"
@@ -115,7 +115,7 @@ const LudoGame = ({
       </div>
       <motion.div
         className="card"
-        style={{ marginTop: "2rem", maxWidth: "800px", margin: "2rem auto" }}
+        style={{ marginTop: "1rem", maxWidth: "800px", margin: "1rem auto" }}
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
       >
