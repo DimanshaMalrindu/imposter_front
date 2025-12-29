@@ -32,6 +32,7 @@ function App() {
   const [ludoTeamId, setLudoTeamId] = useState(null);
   const [ludoPlayerId, setLudoPlayerId] = useState(null);
   const [ludoTeam, setLudoTeam] = useState(null);
+  const [hasValidMoves, setHasValidMoves] = useState(true);
 
   // Shared state
   const [onlinePlayers, setOnlinePlayers] = useState(0);
@@ -159,10 +160,23 @@ function App() {
     socket.on("ludo-dice-rolled", (data) => {
       console.log("Dice rolled:", data);
       setLudoTeam(data.team);
+      setHasValidMoves(data.hasValidMoves);
+    });
+
+    socket.on("ludo-turn-skipped", (data) => {
+      console.log("Turn skipped:", data);
+      setLudoTeam(data.team);
+      setHasValidMoves(true);
     });
 
     socket.on("ludo-pawn-moved", (data) => {
       console.log("Pawn moved:", data);
+      setLudoTeam(data.team);
+      setHasValidMoves(true);
+    });
+
+    socket.on("ludo-new-round-vote", (data) => {
+      console.log("New round vote received:", data);
       setLudoTeam(data.team);
     });
 
@@ -190,6 +204,8 @@ function App() {
       socket.off("ludo-game-started");
       socket.off("ludo-dice-rolled");
       socket.off("ludo-pawn-moved");
+      socket.off("ludo-turn-skipped");
+      socket.off("ludo-new-round-vote");
       socket.off("ludo-round-reset");
     };
   }, []); // Empty dependency array - only run once on mount
@@ -261,7 +277,17 @@ function App() {
   };
 
   const handleLudoNewRound = () => {
-    socketService.emit("ludo-new-round", { teamId: ludoTeamId });
+    socketService.emit("ludo-new-round", {
+      teamId: ludoTeamId,
+      playerId: ludoPlayerId,
+    });
+  };
+
+  const handleLudoSkipTurn = () => {
+    socketService.emit("ludo-skip-turn", {
+      teamId: ludoTeamId,
+      playerId: ludoPlayerId,
+    });
   };
 
   return (
@@ -337,6 +363,8 @@ function App() {
               onRollDice={handleLudoRollDice}
               onMovePawn={handleLudoMovePawn}
               onNewRound={handleLudoNewRound}
+              onSkipTurn={handleLudoSkipTurn}
+              hasValidMoves={hasValidMoves}
             />
           )}
         </>

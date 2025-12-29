@@ -1,15 +1,30 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import LudoBoard from "./LudoBoard";
 
-const LudoGame = ({ team, playerId, onRollDice, onMovePawn, onNewRound }) => {
+const LudoGame = ({
+  team,
+  playerId,
+  onRollDice,
+  onMovePawn,
+  onNewRound,
+  onSkipTurn,
+  hasValidMoves,
+}) => {
   const [selectedPawn, setSelectedPawn] = useState(null);
+  const [skipCountdown, setSkipCountdown] = useState(null);
 
   if (!team) return null;
 
   const currentPlayer = team.players.find((p) => p.id === team.currentTurn);
   const myPlayer = team.players.find((p) => p.id === playerId);
   const isMyTurn = team.currentTurn === playerId;
+
+  // Check if current player has voted for new round
+  const hasVoted = team.newRoundVotes && team.newRoundVotes.includes(playerId);
+  const votesCount = team.newRoundVotes ? team.newRoundVotes.length : 0;
+  const totalPlayers = team.players.length;
+  const votesNeeded = totalPlayers - votesCount;
 
   const colorStyles = {
     red: { bg: "rgba(239, 68, 68, 0.2)", border: "#ef4444", text: "#ef4444" },
@@ -37,6 +52,29 @@ const LudoGame = ({ team, playerId, onRollDice, onMovePawn, onNewRound }) => {
       onMovePawn(pawnIndex);
     }
   };
+
+  // Auto-skip turn if no valid moves
+  useEffect(() => {
+    if (isMyTurn && team.diceValue && hasValidMoves === false) {
+      // Start countdown from 3 seconds
+      setSkipCountdown(3);
+
+      const countdownInterval = setInterval(() => {
+        setSkipCountdown((prev) => {
+          if (prev <= 1) {
+            clearInterval(countdownInterval);
+            onSkipTurn();
+            return null;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+
+      return () => clearInterval(countdownInterval);
+    } else {
+      setSkipCountdown(null);
+    }
+  }, [isMyTurn, team.diceValue, hasValidMoves, onSkipTurn]);
 
   return (
     <div className="container">
@@ -101,18 +139,58 @@ const LudoGame = ({ team, playerId, onRollDice, onMovePawn, onNewRound }) => {
               🎯 It's your turn!
             </p>
           )}
+
+          {/* Show dice value in current turn area */}
+          {team.diceValue && (
+            <motion.div
+              initial={{ scale: 0, rotate: -180 }}
+              animate={{ scale: 1, rotate: 0 }}
+              style={{
+                marginTop: "1rem",
+                fontSize: "3rem",
+                background: "linear-gradient(135deg, #10b981, #059669)",
+                borderRadius: "12px",
+                padding: "1rem",
+                display: "inline-block",
+                boxShadow: "0 8px 20px rgba(16, 185, 129, 0.3)",
+              }}
+            >
+              🎲 {team.diceValue}
+            </motion.div>
+          )}
         </div>
 
-        {/* Dice Section */}
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            gap: "1rem",
-            marginBottom: "2rem",
-          }}
-        >
-          {!team.diceValue ? (
+        {/* No Valid Moves Warning */}
+        {skipCountdown !== null && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            style={{
+              padding: "1rem",
+              background: "rgba(239, 68, 68, 0.2)",
+              border: "2px solid #ef4444",
+              borderRadius: "12px",
+              marginBottom: "1rem",
+              textAlign: "center",
+              color: "#ef4444",
+              fontSize: "1.2rem",
+              fontWeight: "bold",
+            }}
+          >
+            ⚠️ No valid moves available! Skipping turn in {skipCountdown}...
+          </motion.div>
+        )}
+
+        {/* Dice Section - Roll Button */}
+        {!team.diceValue && (
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              gap: "1rem",
+              marginBottom: "2rem",
+            }}
+          >
             <motion.button
               className="btn btn-primary"
               style={{
@@ -130,22 +208,8 @@ const LudoGame = ({ team, playerId, onRollDice, onMovePawn, onNewRound }) => {
             >
               🎲 Roll Dice
             </motion.button>
-          ) : (
-            <motion.div
-              initial={{ scale: 0, rotate: -180 }}
-              animate={{ scale: 1, rotate: 0 }}
-              style={{
-                fontSize: "5rem",
-                background: "linear-gradient(135deg, #10b981, #059669)",
-                borderRadius: "20px",
-                padding: "2rem",
-                boxShadow: "0 10px 30px rgba(16, 185, 129, 0.3)",
-              }}
-            >
-              {team.diceValue}
-            </motion.div>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Ludo Board */}
         <div style={{ marginBottom: "2rem" }}>
@@ -162,16 +226,44 @@ const LudoGame = ({ team, playerId, onRollDice, onMovePawn, onNewRound }) => {
           className="btn"
           style={{
             width: "100%",
-            background: "rgba(251, 191, 36, 0.2)",
-            border: "2px solid var(--warning-color)",
-            color: "var(--warning-color)",
+            background: hasVoted
+              ? "rgba(16, 185, 129, 0.2)"
+              : "rgba(251, 191, 36, 0.2)",
+            border: hasVoted
+              ? "2px solid var(--success-color)"
+              : "2px solid var(--warning-color)",
+            color: hasVoted ? "var(--success-color)" : "var(--warning-color)",
+            cursor: hasVoted ? "not-allowed" : "pointer",
           }}
           onClick={onNewRound}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
+          disabled={hasVoted}
+          whileHover={!hasVoted ? { scale: 1.02 } : {}}
+          whileTap={!hasVoted ? { scale: 0.98 } : {}}
         >
-          🔄 New Round
+          {hasVoted
+            ? `✓ Voted for New Round (${votesCount}/${totalPlayers})`
+            : `🔄 Vote for New Round (${votesCount}/${totalPlayers})`}
         </motion.button>
+
+        {votesNeeded > 0 && votesCount > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            style={{
+              marginTop: "1rem",
+              padding: "0.75rem",
+              background: "rgba(251, 191, 36, 0.1)",
+              border: "1px solid var(--warning-color)",
+              borderRadius: "8px",
+              textAlign: "center",
+              color: "var(--warning-color)",
+              fontSize: "0.9rem",
+            }}
+          >
+            ⏳ Waiting for {votesNeeded} more{" "}
+            {votesNeeded === 1 ? "player" : "players"} to vote...
+          </motion.div>
+        )}
       </motion.div>
     </div>
   );

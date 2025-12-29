@@ -127,15 +127,48 @@ const LudoBoard = ({ team, playerId, onPawnClick, isGameStarted }) => {
 
     // Calculate grid position based on player color and position
     const getGridPosition = (pos, playerColor) => {
-      const startOffsets = {
-        red: 0,
-        green: 13,
-        yellow: 26,
-        blue: 39,
+      // Each player's starting position on the track
+      const startingCells = {
+        red: { row: 6, col: 0, pathIndex: 0 },
+        green: { row: 0, col: 8, pathIndex: 13 },
+        yellow: { row: 8, col: 14, pathIndex: 26 },
+        blue: { row: 14, col: 6, pathIndex: 39 },
       };
 
-      const offset = startOffsets[playerColor] || 0;
-      const cellIndex = (pos - 1 + offset) % pathCells.length;
+      // Handle home stretch (positions 52-58)
+      if (pos > 51) {
+        const homePos = pos - 52; // 0-6 for home stretch positions
+        if (homePos >= 0 && homePos <= 6) {
+          // Define home stretch paths for each color
+          const homeStretchPaths = {
+            red: { row: 7, colStart: 1 }, // [7,1] to [7,7]
+            green: { rowStart: 1, col: 7 }, // [1,7] to [7,7]
+            yellow: { row: 7, colStart: 13 }, // [7,13] to [7,7] (going left)
+            blue: { rowStart: 13, col: 7 }, // [13,7] to [7,7] (going up)
+          };
+
+          const homePath = homeStretchPaths[playerColor];
+          if (playerColor === "red") {
+            return { row: homePath.row, col: homePath.colStart + homePos };
+          } else if (playerColor === "green") {
+            return { row: homePath.rowStart + homePos, col: homePath.col };
+          } else if (playerColor === "yellow") {
+            return { row: homePath.row, col: homePath.colStart - homePos };
+          } else if (playerColor === "blue") {
+            return { row: homePath.rowStart - homePos, col: homePath.col };
+          }
+        }
+        return null; // Beyond valid positions
+      }
+
+      // Position 1 is the starting cell for each player
+      if (pos === 1) {
+        return startingCells[playerColor];
+      }
+
+      // For positions 2-51, calculate from the starting position
+      const startIndex = startingCells[playerColor].pathIndex;
+      const cellIndex = (startIndex + pos - 1) % pathCells.length;
 
       if (cellIndex >= 0 && cellIndex < pathCells.length) {
         const cell = pathCells[cellIndex];
@@ -376,16 +409,16 @@ const LudoBoard = ({ team, playerId, onPawnClick, isGameStarted }) => {
                   fontWeight: "bold",
                 }}
               >
-                <div style={{ fontSize: "0.35rem", color: "#999" }}>
+                {/* <div style={{ fontSize: "0.35rem", color: "#999" }}>
                   [{rowIndex},{colIndex}]
-                </div>
+                </div> */}
                 {cell.type === "center" && (
                   <span style={{ fontSize: "0.6rem" }}>★</span>
                 )}
                 {cell.type === "start" && (
                   <span style={{ fontSize: "0.5rem", color: "#000" }}>S</span>
                 )}
-                {cell.pathIndex >= 0 && (
+                {/* {cell.pathIndex >= 0 && (
                   <span
                     style={{
                       fontSize: "0.5rem",
@@ -395,7 +428,7 @@ const LudoBoard = ({ team, playerId, onPawnClick, isGameStarted }) => {
                   >
                     {cell.pathIndex}
                   </span>
-                )}
+                )} */}
               </div>
             );
           })
