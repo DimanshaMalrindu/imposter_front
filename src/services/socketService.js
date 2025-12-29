@@ -1,5 +1,7 @@
 import { io } from "socket.io-client";
 
+// Get backend URL from environment variable
+// In production (Vercel), this should be set to your deployed backend URL
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || "http://localhost:3001";
 
 class SocketService {
@@ -10,10 +12,12 @@ class SocketService {
   connect() {
     console.log("Connecting to server at:", SOCKET_URL);
     this.socket = io(SOCKET_URL, {
-      transports: ["websocket"],
+      transports: ["websocket", "polling"], // Try websocket first, fallback to polling
       reconnection: true,
       reconnectionDelay: 1000,
       reconnectionAttempts: 5,
+      withCredentials: false, // Set to true if using cookies/sessions
+      autoConnect: true,
     });
 
     this.socket.on("connect", () => {
