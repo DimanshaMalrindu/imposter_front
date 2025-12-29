@@ -31,6 +31,7 @@ function App() {
     totalPlayers: 0,
   });
   const [showReveal, setShowReveal] = useState(false);
+  const [imposterName, setImposterName] = useState("");
   const [activeSpeakers, setActiveSpeakers] = useState([]); // Track all active speakers
 
   // Ludo game state
@@ -115,6 +116,16 @@ function App() {
     socket.on("reveal-imposter", (data) => {
       setShowReveal(true);
       setIsImposter(data.isImposter);
+
+      // Find and set imposter name from team
+      if (team && data.imposterId) {
+        const imposterPlayer = team.players.find(
+          (p) => p.id === data.imposterId
+        );
+        if (imposterPlayer) {
+          setImposterName(imposterPlayer.name);
+        }
+      }
 
       setTimeout(() => {
         setShowReveal(false);
@@ -533,7 +544,9 @@ function App() {
         </div>
       </div>
 
-      {showReveal && <ImposterReveal isImposter={isImposter} />}
+      {showReveal && (
+        <ImposterReveal isImposter={isImposter} imposterName={imposterName} />
+      )}
 
       {/* Error Popup */}
       <ErrorPopup

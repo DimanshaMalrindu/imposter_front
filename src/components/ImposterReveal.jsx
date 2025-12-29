@@ -1,15 +1,58 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-const ImposterReveal = ({ isImposter }) => {
+const ImposterReveal = ({ isImposter, imposterName }) => {
   const [show, setShow] = useState(true);
+  const alarmAudioRef = useRef(null);
+  const playCountRef = useRef(0);
+
+  useEffect(() => {
+    // Play sound three times for the imposter
+    if (isImposter && alarmAudioRef.current) {
+      alarmAudioRef.current.volume = 0.6;
+
+      const playSound = () => {
+        if (playCountRef.current < 3 && alarmAudioRef.current) {
+          alarmAudioRef.current.currentTime = 0;
+          alarmAudioRef.current
+            .play()
+            .catch((e) => console.error("Sound play error:", e));
+          playCountRef.current += 1;
+        }
+      };
+
+      // Handle when sound ends to play again
+      const handleEnded = () => {
+        if (playCountRef.current < 3) {
+          playSound();
+        }
+      };
+
+      alarmAudioRef.current.addEventListener("ended", handleEnded);
+
+      // Play the first time
+      playSound();
+
+      return () => {
+        if (alarmAudioRef.current) {
+          alarmAudioRef.current.removeEventListener("ended", handleEnded);
+        }
+      };
+    }
+  }, [isImposter]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setShow(false);
     }, 5000);
 
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      if (alarmAudioRef.current) {
+        alarmAudioRef.current.pause();
+        alarmAudioRef.current.currentTime = 0;
+      }
+    };
   }, []);
 
   if (!show) return null;
@@ -52,10 +95,39 @@ const ImposterReveal = ({ isImposter }) => {
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
+            style={{
+              fontSize: isImposter ? "inherit" : "2rem",
+              fontWeight: "bold",
+            }}
           >
-            {isImposter ? "YOU ARE THE IMPOSTER!" : "WATCH THE IMPOSTER!"}
+            {isImposter ? (
+              "YOU ARE THE IMPOSTER!"
+            ) : (
+              <>
+                <div style={{ fontSize: "2.5rem", marginBottom: "1rem" }}>
+                  THE IMPOSTER IS
+                </div>
+                <div
+                  style={{
+                    fontSize: "3.5rem",
+                    color: "#ef4444",
+                    textShadow: "0 0 20px rgba(239, 68, 68, 0.8)",
+                  }}
+                >
+                  {imposterName || "Unknown"}
+                </div>
+              </>
+            )}
           </motion.div>
         </motion.div>
+
+        {/* Alarm sound for imposter reveal */}
+        <audio ref={alarmAudioRef} preload="auto" style={{ display: "none" }}>
+          <source
+            src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3"
+            type="audio/mpeg"
+          />
+        </audio>
       </motion.div>
     </AnimatePresence>
   );
