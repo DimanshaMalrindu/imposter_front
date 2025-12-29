@@ -178,9 +178,15 @@ const LudoGame = ({
               whileHover={isMyTurn ? { scale: 1.05 } : {}}
               whileTap={isMyTurn ? { scale: 0.95 } : {}}
               animate={isMyTurn ? { y: [0, -8, 0] } : {}}
-              transition={{ duration: 0.8, repeat: Infinity, ease: "easeInOut" }}
+              transition={{
+                duration: 0.8,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
             >
-              {isMyTurn ? "🎲 Roll Dice" : `⏳ ${currentPlayer?.name}'s turn...`}
+              {isMyTurn
+                ? "🎲 Roll Dice"
+                : `⏳ ${currentPlayer?.name}'s turn...`}
             </motion.button>
           ) : (
             <motion.div
@@ -188,7 +194,7 @@ const LudoGame = ({
               animate={{ scale: 1, rotate: 0 }}
               style={{
                 fontSize: "1.5rem",
-                background: isMyTurn 
+                background: isMyTurn
                   ? "linear-gradient(135deg, #10b981, #059669)"
                   : "var(--card-bg)",
                 borderRadius: "12px",
@@ -196,7 +202,7 @@ const LudoGame = ({
                 display: "inline-flex",
                 alignItems: "center",
                 justifyContent: "center",
-                boxShadow: isMyTurn 
+                boxShadow: isMyTurn
                   ? "0 8px 20px rgba(16, 185, 129, 0.3)"
                   : "0 8px 20px rgba(0, 0, 0, 0.3)",
                 color: "white",
@@ -205,7 +211,9 @@ const LudoGame = ({
                 border: isMyTurn ? "none" : "1px solid var(--border-color)",
               }}
             >
-              {isMyTurn ? `🎲 ${team.diceValue}` : `${currentPlayer?.name} rolled: ${team.diceValue}`}
+              {isMyTurn
+                ? `🎲 ${team.diceValue}`
+                : `${currentPlayer?.name} rolled: ${team.diceValue}`}
             </motion.div>
           )}
         </div>

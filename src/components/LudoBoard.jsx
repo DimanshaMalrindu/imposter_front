@@ -11,6 +11,17 @@ const LudoBoard = ({ team, playerId, onPawnClick, isGameStarted }) => {
     yellow: "#fbbf24",
   };
 
+  // Assign different chess pieces to each player based on their color
+  const getChessPiece = (playerColor) => {
+    const pieces = {
+      red: "♞", // Knight
+      blue: "♔", // King
+      green: "♜", // Rook
+      yellow: "♝", // Bishop
+    };
+    return pieces[playerColor] || "♟";
+  };
+
   // CLASSIC LUDO BOARD - 15x15 GRID STRUCTURE
   // Based on standard Ludo board geometry
 
@@ -210,29 +221,22 @@ const LudoBoard = ({ team, playerId, onPawnClick, isGameStarted }) => {
           style={{
             width: "100%",
             height: "100%",
-            background: `radial-gradient(circle at 30% 30%, ${
-              colors[player.color]
-            }ff, ${colors[player.color]}dd 50%, ${colors[player.color]}88)`,
-            borderRadius: "50%",
-            border: isMyPawn
-              ? "3px solid #ffffff"
-              : "2px solid rgba(255,255,255,0.6)",
             cursor: canMove ? "pointer" : "default",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            color: "white",
+            color: colors[player.color],
             fontWeight: "bold",
-            fontSize: "0.9rem",
-            boxShadow: `0 6px 18px rgba(0,0,0,0.6), inset 0 3px 8px rgba(255,255,255,0.3), inset 0 -3px 8px rgba(0,0,0,0.4)`,
+            fontSize: "1.5rem",
             zIndex: 20 + position,
-            opacity: isMyPawn ? 1 : 0.85,
-            textShadow: "0 1px 3px rgba(0,0,0,0.5)",
+            textShadow: "0 0 3px #000, 0 0 3px #000, 0 0 3px #000, 0 2px 4px rgba(0,0,0,0.6)",
+            WebkitTextStroke: "2px #000",
+            paintOrder: "stroke fill",
           }}
           whileHover={canMove ? { scale: 1.3 } : {}}
           whileTap={canMove ? { scale: 0.9 } : {}}
         >
-          {isMyPawn ? '♞' : '♟'}
+          {getChessPiece(player.color)}
         </motion.div>
       </div>
     );
@@ -254,12 +258,14 @@ const LudoBoard = ({ team, playerId, onPawnClick, isGameStarted }) => {
     const home = homeAreas[color];
     const cellSize = 100 / 15;
 
-    // 4 pawn slots in 2x2 arrangement within the 5x5 home
+    // 4 pawn slots evenly distributed within the 5x5 home
+    // Divide 5x5 area into 4 squares and place pieces at center of each
+    // Adjusted for the +0.5 offset applied during rendering
     const pawnSlots = [
-      { row: home.startRow + 1.5, col: home.startCol + 1.5 },
-      { row: home.startRow + 1.5, col: home.startCol + 3.5 },
-      { row: home.startRow + 3.5, col: home.startCol + 1.5 },
-      { row: home.startRow + 3.5, col: home.startCol + 3.5 },
+      { row: home.startRow + 0.75, col: home.startCol + 0.75 },
+      { row: home.startRow + 0.75, col: home.startCol + 3.25 },
+      { row: home.startRow + 3.25, col: home.startCol + 0.75 },
+      { row: home.startRow + 3.25, col: home.startCol + 3.25 },
     ];
 
     return (
@@ -318,12 +324,6 @@ const LudoBoard = ({ team, playerId, onPawnClick, isGameStarted }) => {
                   style={{
                     width: "100%",
                     height: "100%",
-                    background: `radial-gradient(circle at 30% 30%, ${colors[color]}ff, ${colors[color]}dd 50%, ${colors[color]}88)`,
-                    borderRadius: "50%",
-                    border:
-                      pawnData.player.id === playerId
-                        ? "3px solid #ffffff"
-                        : "2px solid rgba(255,255,255,0.6)",
                     cursor:
                       isGameStarted && team.currentTurn === pawnData.player.id
                         ? "pointer"
@@ -331,11 +331,12 @@ const LudoBoard = ({ team, playerId, onPawnClick, isGameStarted }) => {
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    color: "white",
+                    color: colors[color],
                     fontWeight: "bold",
-                    fontSize: "0.9rem",
-                    boxShadow: `0 6px 18px rgba(0,0,0,0.6), inset 0 3px 8px rgba(255,255,255,0.3), inset 0 -3px 8px rgba(0,0,0,0.4)`,
-                    textShadow: "0 1px 3px rgba(0,0,0,0.5)",
+                    fontSize: "1.5rem",
+                    textShadow: "0 0 3px #000, 0 0 3px #000, 0 0 3px #000, 0 2px 4px rgba(0,0,0,0.6)",
+                    WebkitTextStroke: "2px #000",
+                    paintOrder: "stroke fill",
                   }}
                   whileHover={
                     isGameStarted && team.currentTurn === pawnData.player.id
@@ -343,7 +344,7 @@ const LudoBoard = ({ team, playerId, onPawnClick, isGameStarted }) => {
                       : {}
                   }
                 >
-                  {pawnData.player.id === playerId ? '♞' : '♟'}
+                  {getChessPiece(color)}
                 </motion.div>
               ) : (
                 <div
@@ -497,7 +498,7 @@ const LudoBoard = ({ team, playerId, onPawnClick, isGameStarted }) => {
                   <span style={{ fontSize: "0.6rem" }}>★</span>
                 )}
                 {cell.type === "start" && (
-                  <span style={{ fontSize: "0.5rem", color: "#000" }}>S</span>
+                  <span style={{ fontSize: "0.6rem" }}>🏠</span>
                 )}
                 {/* {cell.pathIndex >= 0 && (
                   <span
