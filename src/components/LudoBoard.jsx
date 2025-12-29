@@ -210,12 +210,12 @@ const LudoBoard = ({ team, playerId, onPawnClick, isGameStarted }) => {
           style={{
             width: "100%",
             height: "100%",
-            background: `linear-gradient(135deg, ${colors[player.color]}, ${
+            background: `radial-gradient(circle at 30% 30%, ${
               colors[player.color]
-            }dd)`,
+            }ff, ${colors[player.color]}dd 50%, ${colors[player.color]}88)`,
             borderRadius: "50%",
             border: isMyPawn
-              ? "3px solid white"
+              ? "3px solid #ffffff"
               : "2px solid rgba(255,255,255,0.6)",
             cursor: canMove ? "pointer" : "default",
             display: "flex",
@@ -223,10 +223,11 @@ const LudoBoard = ({ team, playerId, onPawnClick, isGameStarted }) => {
             justifyContent: "center",
             color: "white",
             fontWeight: "bold",
-            fontSize: "0.7rem",
-            boxShadow: "0 4px 12px rgba(0,0,0,0.5)",
+            fontSize: "0.9rem",
+            boxShadow: `0 6px 18px rgba(0,0,0,0.6), inset 0 3px 8px rgba(255,255,255,0.3), inset 0 -3px 8px rgba(0,0,0,0.4)`,
             zIndex: 20 + position,
             opacity: isMyPawn ? 1 : 0.85,
+            textShadow: "0 1px 3px rgba(0,0,0,0.5)",
           }}
           whileHover={canMove ? { scale: 1.3 } : {}}
           whileTap={canMove ? { scale: 0.9 } : {}}
@@ -273,10 +274,10 @@ const LudoBoard = ({ team, playerId, onPawnClick, isGameStarted }) => {
             top: `${home.startRow * cellSize}%`,
             width: `${6 * cellSize}%`,
             height: `${6 * cellSize}%`,
-            background: `linear-gradient(135deg, ${colors[color]}30, ${colors[color]}10)`,
-            border: `3px solid ${colors[color]}`,
-            borderRadius: "8px",
-            boxShadow: `inset 0 0 20px ${colors[color]}20`,
+            background: `linear-gradient(145deg, ${colors[color]}, ${colors[color]}dd)`,
+            border: `4px solid ${colors[color]}`,
+            borderRadius: "12px",
+            boxShadow: `inset 0 6px 15px rgba(0,0,0,0.3), inset 0 -4px 10px rgba(255,255,255,0.2), 0 4px 12px ${colors[color]}80`,
           }}
         />
 
@@ -319,11 +320,11 @@ const LudoBoard = ({ team, playerId, onPawnClick, isGameStarted }) => {
                   style={{
                     width: "100%",
                     height: "100%",
-                    background: `linear-gradient(135deg, ${colors[color]}, ${colors[color]}dd)`,
+                    background: `radial-gradient(circle at 30% 30%, ${colors[color]}ff, ${colors[color]}dd 50%, ${colors[color]}88)`,
                     borderRadius: "50%",
                     border:
                       pawnData.player.id === playerId
-                        ? "3px solid white"
+                        ? "3px solid #ffffff"
                         : "2px solid rgba(255,255,255,0.6)",
                     cursor:
                       isGameStarted && team.currentTurn === pawnData.player.id
@@ -334,8 +335,9 @@ const LudoBoard = ({ team, playerId, onPawnClick, isGameStarted }) => {
                     justifyContent: "center",
                     color: "white",
                     fontWeight: "bold",
-                    fontSize: "0.7rem",
-                    boxShadow: "0 4px 12px rgba(0,0,0,0.5)",
+                    fontSize: "0.9rem",
+                    boxShadow: `0 6px 18px rgba(0,0,0,0.6), inset 0 3px 8px rgba(255,255,255,0.3), inset 0 -3px 8px rgba(0,0,0,0.4)`,
+                    textShadow: "0 1px 3px rgba(0,0,0,0.5)",
                   }}
                   whileHover={
                     isGameStarted && team.currentTurn === pawnData.player.id
@@ -383,19 +385,82 @@ const LudoBoard = ({ team, playerId, onPawnClick, isGameStarted }) => {
 
             let bgColor = "#fafafa";
             let borderColor = "#e0e0e0";
+            let cellShadow =
+              "inset 0 2px 4px rgba(0,0,0,0.1), inset 0 -1px 2px rgba(255,255,255,0.5)";
+            let customBorder = null;
 
-            if (cell.type === "path" || cell.type === "start") {
-              bgColor = cell.color ? `${colors[cell.color]}20` : "#fff";
+            // Special case for cell [6,6] - diagonal red and blue split
+            if (rowIndex === 6 && colIndex === 6) {
+              bgColor = `linear-gradient(45deg, ${colors.red} 50%, ${colors.green} 50%)`;
+              borderColor = colors.red;
+              customBorder = {
+                borderTop: `2px solid ${colors.green}`,
+                borderRight: `2px solid ${colors.green}`,
+                borderBottom: `2px solid ${colors.red}`,
+                borderLeft: `2px solid ${colors.red}`,
+              };
+              cellShadow = "inset 0 3px 6px rgba(0,0,0,0.2), inset 0 -2px 4px rgba(255,255,255,0.4), 0 2px 4px rgba(0,0,0,0.15)";
+            } else if (rowIndex === 6 && colIndex === 8) {
+              bgColor = `linear-gradient(135deg, ${colors.green} 50%, ${colors.yellow} 50%)`;
+              borderColor = colors.green;
+              customBorder = {
+                borderTop: `2px solid ${colors.green}`,
+                borderRight: `2px solid ${colors.yellow}`,
+                borderBottom: `2px solid ${colors.yellow}`,
+                borderLeft: `2px solid ${colors.green}`,
+              };
+              cellShadow = "inset 0 3px 6px rgba(0,0,0,0.2), inset 0 -2px 4px rgba(255,255,255,0.4), 0 2px 4px rgba(0,0,0,0.15)";
+            } else if (rowIndex === 8 && colIndex === 8) {
+              bgColor = `linear-gradient(225deg, ${colors.yellow} 50%, ${colors.blue} 50%)`;
+              borderColor = colors.yellow;
+              customBorder = {
+                borderTop: `2px solid ${colors.yellow}`,
+                borderRight: `2px solid ${colors.yellow}`,
+                borderBottom: `2px solid ${colors.blue}`,
+                borderLeft: `2px solid ${colors.blue}`,
+              };
+              cellShadow = "inset 0 3px 6px rgba(0,0,0,0.2), inset 0 -2px 4px rgba(255,255,255,0.4), 0 2px 4px rgba(0,0,0,0.15)";
+            } else if (rowIndex === 8 && colIndex === 6) {
+              bgColor = `linear-gradient(135deg, ${colors.red} 50%, ${colors.blue} 50%)`;
+              borderColor = colors.red;
+              customBorder = {
+                borderTop: `2px solid ${colors.red}`,
+                borderRight: `2px solid ${colors.blue}`,
+                borderBottom: `2px solid ${colors.blue}`,
+                borderLeft: `2px solid ${colors.red}`,
+              };
+              cellShadow = "inset 0 3px 6px rgba(0,0,0,0.2), inset 0 -2px 4px rgba(255,255,255,0.4), 0 2px 4px rgba(0,0,0,0.15)";
+            } else if (rowIndex === 7 && colIndex === 7) {
+              // Center cell - pyramid top view with all four colors
+              bgColor = `conic-gradient(from 45deg, ${colors.yellow} 0deg 90deg, ${colors.blue} 90deg 180deg, ${colors.red} 180deg 270deg, ${colors.green} 270deg 360deg)`;
+              borderColor = "#666";
+              customBorder = {
+                borderTop: `2px solid ${colors.green}`,
+                borderRight: `2px solid ${colors.yellow}`,
+                borderBottom: `2px solid ${colors.blue}`,
+                borderLeft: `2px solid ${colors.red}`,
+              };
+              cellShadow = "inset 0 5px 10px rgba(0,0,0,0.3), inset 0 -3px 8px rgba(255,255,255,0.4), 0 4px 8px rgba(0,0,0,0.5)";
+            } else if (cell.type === "path" || cell.type === "start") {
+              bgColor = cell.color ? `${colors[cell.color]}` : "#fff";
               borderColor = cell.color ? colors[cell.color] : "#ccc";
+              cellShadow = cell.color
+                ? `inset 0 3px 6px rgba(0,0,0,0.2), inset 0 -2px 4px rgba(255,255,255,0.4), 0 2px 4px rgba(0,0,0,0.15)`
+                : "inset 0 2px 5px rgba(0,0,0,0.1), 0 1px 3px rgba(0,0,0,0.1)";
             } else if (cell.type === "safe") {
               bgColor = "#fef3c7";
               borderColor = "#f59e0b";
+              cellShadow =
+                "inset 0 3px 6px rgba(245,158,11,0.3), inset 0 -2px 4px rgba(255,255,255,0.6)";
             } else if (cell.type === "home-stretch") {
-              bgColor = `${colors[cell.color]}40`;
+              bgColor = `${colors[cell.color]}`;
               borderColor = colors[cell.color];
+              cellShadow = `inset 0 4px 8px rgba(0,0,0,0.25), inset 0 -3px 6px rgba(255,255,255,0.3), 0 2px 5px rgba(0,0,0,0.2)`;
             } else if (cell.type === "center") {
-              bgColor = "linear-gradient(135deg, #fbbf24, #f59e0b)";
+              bgColor = "linear-gradient(145deg, #fbbf24, #f59e0b)";
               borderColor = "#dc2626";
+              cellShadow =
+                "inset 0 5px 10px rgba(0,0,0,0.3), inset 0 -3px 8px rgba(255,255,255,0.4), 0 4px 8px rgba(220,38,38,0.5)";
             }
 
             return (
@@ -408,7 +473,8 @@ const LudoBoard = ({ team, playerId, onPawnClick, isGameStarted }) => {
                   width: `${cellSize}%`,
                   height: `${cellSize}%`,
                   background: bgColor,
-                  border: `1px solid ${borderColor}`,
+                  ...(customBorder || { border: `2px solid ${borderColor}` }),
+                  boxShadow: cellShadow,
                   boxSizing: "border-box",
                   display: "flex",
                   flexDirection: "column",
@@ -419,7 +485,7 @@ const LudoBoard = ({ team, playerId, onPawnClick, isGameStarted }) => {
                   fontWeight: "bold",
                 }}
               >
-                {/* <div style={{ fontSize: "0.35rem", color: "#999" }}>
+                {/* <div style={{ fontSize: "0.35rem", color: "#333", textShadow: "0 1px 1px rgba(255,255,255,0.8)" }}>
                   [{rowIndex},{colIndex}]
                 </div> */}
                 {cell.type === "center" && (
@@ -455,10 +521,12 @@ const LudoBoard = ({ team, playerId, onPawnClick, isGameStarted }) => {
         margin: "0 auto",
         aspectRatio: "1",
         position: "relative",
-        background: "linear-gradient(135deg, #1f2937, #111827)",
+        background: "linear-gradient(145deg, #2d3748, #1a202c)",
         borderRadius: "20px",
-        padding: "12px",
-        boxShadow: "0 20px 60px rgba(0,0,0,0.6)",
+        padding: "20px",
+        boxShadow:
+          "0 25px 70px rgba(0,0,0,0.8), inset 0 2px 10px rgba(255,255,255,0.1), inset 0 -2px 10px rgba(0,0,0,0.5)",
+        border: "3px solid #374151",
       }}
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
@@ -469,9 +537,11 @@ const LudoBoard = ({ team, playerId, onPawnClick, isGameStarted }) => {
           width: "100%",
           height: "100%",
           position: "relative",
-          background: "#f5f5f5",
+          background: "linear-gradient(145deg, #fafafa, #e5e5e5)",
           borderRadius: "16px",
           overflow: "hidden",
+          boxShadow:
+            "inset 0 4px 12px rgba(0,0,0,0.15), inset 0 -4px 12px rgba(255,255,255,0.8)",
         }}
       >
         {/* Render the board grid */}
