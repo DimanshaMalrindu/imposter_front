@@ -68,7 +68,7 @@ const GameSelection = ({ onSelectGame }) => {
         animate="visible"
       >
         <motion.div variants={itemVariants}>
-          <h1 className="game-selection-title">Select a Game</h1>
+          <h1 className="game-selection-title">🎲 Board Games</h1>
           <p className="game-selection-subtitle">
             Choose your favorite game to play with friends!
           </p>

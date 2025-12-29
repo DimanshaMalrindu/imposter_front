@@ -1,7 +1,7 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-const Lobby = ({ team, onStartGame }) => {
+const Lobby = ({ team, onStartGame, onBackToSelection }) => {
   const canStart = team && team.players.length >= 2;
 
   const containerVariants = {
@@ -21,6 +21,36 @@ const Lobby = ({ team, onStartGame }) => {
 
   return (
     <div className="container">
+      {/* Branding Header */}
+      <div
+        onClick={onBackToSelection}
+        style={{
+          position: "fixed",
+          top: "1rem",
+          left: "1rem",
+          fontSize: "1.5rem",
+          fontWeight: "bold",
+          color: "var(--primary-color)",
+          cursor: "pointer",
+          zIndex: 1000,
+          padding: "0.5rem 1rem",
+          borderRadius: "8px",
+          background: "rgba(17, 24, 39, 0.8)",
+          backdropFilter: "blur(10px)",
+          border: "2px solid var(--primary-color)",
+          transition: "all 0.3s ease",
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = "scale(1.05)";
+          e.currentTarget.style.background = "rgba(99, 102, 241, 0.2)";
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = "scale(1)";
+          e.currentTarget.style.background = "rgba(17, 24, 39, 0.8)";
+        }}
+      >
+        🎲 Board Games
+      </div>
       <motion.div
         className="card fade-in"
         style={{ marginTop: "2rem", maxWidth: "600px", margin: "2rem auto" }}

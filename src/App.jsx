@@ -10,6 +10,8 @@ import LudoGame from "./components/LudoGame";
 import UnoHome from "./components/UnoHome";
 import UnoLobby from "./components/UnoLobby";
 import UnoGame from "./components/UnoGame";
+import RejoinModal from "./components/RejoinModal";
+import LoadingScreen from "./components/LoadingScreen";
 import ErrorPopup from "./components/ErrorPopup";
 import socketService from "./services/socketService";
 import "./index.css";
@@ -46,6 +48,9 @@ function App() {
   const [onlinePlayers, setOnlinePlayers] = useState(0);
   const [activeTeams, setActiveTeams] = useState(0);
   const [errorMessage, setErrorMessage] = useState(null);
+  const [showRejoinModal, setShowRejoinModal] = useState(false);
+  const [pendingGameSelection, setPendingGameSelection] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const socket = socketService.connect();
@@ -299,6 +304,28 @@ function App() {
     };
   }, []); // Empty dependency array - only run once on mount
 
+  const handleBackToSelection = () => {
+    // Reset game state and return to game selection
+    setSelectedGame(null);
+    setGameState("home");
+    // Clear all game states
+    setTeamId(null);
+    setPlayerId(null);
+    setTeam(null);
+    setWord(null);
+    setIsImposter(false);
+    setRevealProgress({ revealedCount: 0, totalPlayers: 0 });
+    setShowReveal(false);
+    setActiveSpeakers([]);
+    setLudoTeamId(null);
+    setLudoPlayerId(null);
+    setLudoTeam(null);
+    setHasValidMoves(true);
+    setUnoTeamId(null);
+    setUnoPlayerId(null);
+    setUnoTeam(null);
+  };
+
   const handleCreateTeam = (teamName, playerName) => {
     socketService.emit("create-team", { teamName, playerName });
   };
@@ -334,7 +361,65 @@ function App() {
   };
 
   const handleSelectGame = (gameId) => {
+    // Check if user already has an active game for this game type
+    let hasActiveGame = false;
+
+    if (gameId === "imposter" && teamId && playerId) {
+      hasActiveGame = true;
+    } else if (gameId === "ludo" && ludoTeamId && ludoPlayerId) {
+      hasActiveGame = true;
+    } else if (gameId === "uno" && unoTeamId && unoPlayerId) {
+      hasActiveGame = true;
+    }
+
+    if (hasActiveGame) {
+      // Show rejoin modal
+      setPendingGameSelection(gameId);
+      setShowRejoinModal(true);
+    } else {
+      // No active game, proceed normally
+      setSelectedGame(gameId);
+      setGameState("home");
+    }
+  };
+
+  const handleRejoinGame = () => {
+    // User wants to rejoin their existing game
+    setSelectedGame(pendingGameSelection);
+    setShowRejoinModal(false);
+    setPendingGameSelection(null);
+    // Game state is already preserved, just show the appropriate screen
+  };
+
+  const handleNewTeam = () => {
+    // User wants to start fresh with a new team
+    const gameId = pendingGameSelection;
+
+    // Clear the state for this specific game
+    if (gameId === "imposter") {
+      setTeamId(null);
+      setPlayerId(null);
+      setTeam(null);
+      setWord(null);
+      setIsImposter(false);
+      setRevealProgress({ revealedCount: 0, totalPlayers: 0 });
+      setShowReveal(false);
+    } else if (gameId === "ludo") {
+      setLudoTeamId(null);
+      setLudoPlayerId(null);
+      setLudoTeam(null);
+      setHasValidMoves(true);
+    } else if (gameId === "uno") {
+      setUnoTeamId(null);
+      setUnoPlayerId(null);
+      setUnoTeam(null);
+    }
+
     setSelectedGame(gameId);
+    setGameState("home");
+    setShowRejoinModal(false);
+    setPendingGameSelection(null);
+    setActiveSpeakers([]);
   };
 
   // Ludo game handlers
@@ -432,6 +517,9 @@ function App() {
 
   return (
     <div className="App">
+      {/* Loading Screen */}
+      {isLoading && <LoadingScreen onComplete={() => setIsLoading(false)} />}
+
       {/* Online Players Counter */}
       <div className="online-counter">
         <div className="counter-item">
@@ -453,6 +541,21 @@ function App() {
         onClose={() => setErrorMessage(null)}
       />
 
+      {/* Rejoin Modal */}
+      {showRejoinModal && (
+        <RejoinModal
+          gameName={
+            pendingGameSelection === "imposter"
+              ? "Imposter"
+              : pendingGameSelection === "ludo"
+              ? "Ludo"
+              : "UNO"
+          }
+          onRejoin={handleRejoinGame}
+          onNewTeam={handleNewTeam}
+        />
+      )}
+
       {/* Game Selection - First Screen */}
       {!selectedGame && <GameSelection onSelectGame={handleSelectGame} />}
 
@@ -460,11 +563,19 @@ function App() {
       {selectedGame === "imposter" && (
         <>
           {gameState === "home" && (
-            <Home onCreateTeam={handleCreateTeam} onJoinTeam={handleJoinTeam} />
+            <Home
+              onCreateTeam={handleCreateTeam}
+              onJoinTeam={handleJoinTeam}
+              onBackToSelection={handleBackToSelection}
+            />
           )}
 
           {gameState === "lobby" && (
-            <Lobby team={team} onStartGame={handleStartGame} />
+            <Lobby
+              team={team}
+              onStartGame={handleStartGame}
+              onBackToSelection={handleBackToSelection}
+            />
           )}
 
           {gameState === "playing" && (
@@ -477,6 +588,7 @@ function App() {
               onRevealVote={handleRevealVote}
               revealProgress={revealProgress}
               onNewRound={handleNewRound}
+              onBackToSelection={handleBackToSelection}
             />
           )}
         </>
@@ -489,11 +601,16 @@ function App() {
             <LudoHome
               onCreateTeam={handleLudoCreateTeam}
               onJoinTeam={handleLudoJoinTeam}
+              onBackToSelection={handleBackToSelection}
             />
           )}
 
           {gameState === "lobby" && (
-            <LudoLobby team={ludoTeam} onStartGame={handleLudoStartGame} />
+            <LudoLobby
+              team={ludoTeam}
+              onStartGame={handleLudoStartGame}
+              onBackToSelection={handleBackToSelection}
+            />
           )}
 
           {gameState === "playing" && (
@@ -506,6 +623,7 @@ function App() {
               onSkipTurn={handleLudoSkipTurn}
               hasValidMoves={hasValidMoves}
               activeSpeakers={activeSpeakers}
+              onBackToSelection={handleBackToSelection}
             />
           )}
         </>
@@ -518,11 +636,16 @@ function App() {
             <UnoHome
               onCreateTeam={handleUnoCreateTeam}
               onJoinTeam={handleUnoJoinTeam}
+              onBackToSelection={handleBackToSelection}
             />
           )}
 
           {gameState === "lobby" && (
-            <UnoLobby team={unoTeam} onStartGame={handleUnoStartGame} />
+            <UnoLobby
+              team={unoTeam}
+              onStartGame={handleUnoStartGame}
+              onBackToSelection={handleBackToSelection}
+            />
           )}
 
           {gameState === "playing" && (
@@ -535,6 +658,7 @@ function App() {
               onCatchUnoFailure={handleUnoCatchFailure}
               onNewRound={handleUnoNewRound}
               activeSpeakers={activeSpeakers}
+              onBackToSelection={handleBackToSelection}
             />
           )}
         </>
