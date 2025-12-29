@@ -24,12 +24,15 @@ body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4c1d95 100%);
   min-height: 100vh;
+  height: 100vh;
   color: var(--text-primary);
   overflow-x: hidden;
+  overflow-y: auto;
 }
 
 #root {
   min-height: 100vh;
+  height: 100vh;
 }
 
 /* Animated background particles */

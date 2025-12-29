@@ -9,20 +9,20 @@ const SoundWave = () => {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        gap: "4px",
-        height: "40px",
+        gap: "3px",
+        height: "30px",
       }}
     >
       {[0, 1, 2, 3, 4].map((i) => (
         <motion.div
           key={i}
           style={{
-            width: "4px",
+            width: "3px",
             background: "linear-gradient(180deg, #10b981, #059669)",
             borderRadius: "2px",
           }}
           animate={{
-            height: ["20px", "40px", "15px", "35px", "20px"],
+            height: ["15px", "30px", "12px", "26px", "15px"],
           }}
           transition={{
             duration: 1,
@@ -281,112 +281,116 @@ const VoiceChat = ({ socket, teamId, playerId, team, activeSpeakers }) => {
   }, []);
 
   return (
-    <motion.div
-      style={{
-        marginTop: "1.5rem",
-        padding: "1.5rem",
-        background: "rgba(99, 102, 241, 0.1)",
-        borderRadius: "12px",
-        border: "1px solid rgba(99, 102, 241, 0.3)",
-      }}
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.5 }}
-    >
-      <div style={{ textAlign: "center" }}>
-        <h3
-          style={{
-            marginBottom: "1rem",
-            color: "var(--text-secondary)",
-            fontSize: "1.1rem",
-          }}
-        >
-          🎙️ Voice Chat
-        </h3>
-
+    <>
+      {/* Floating mic button at bottom left */}
+      <motion.div
+        style={{
+          position: "fixed",
+          bottom: "2rem",
+          left: "2rem",
+          zIndex: 1000,
+        }}
+        initial={{ opacity: 0, scale: 0 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: 0.5, type: "spring", stiffness: 200 }}
+      >
         <motion.button
-          className="btn btn-primary"
+          onClick={toggleMicrophone}
           style={{
-            width: "100%",
-            padding: "1.5rem",
-            fontSize: "1.2rem",
+            width: "70px",
+            height: "70px",
+            borderRadius: "50%",
+            border: "none",
+            background: isCurrentPlayerSpeaking
+              ? "linear-gradient(135deg, #10b981, #059669)"
+              : "linear-gradient(135deg, #ef4444, #dc2626)",
+            cursor: "pointer",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            gap: "0.5rem",
-            background: isCurrentPlayerSpeaking
-              ? "linear-gradient(135deg, #ef4444, #dc2626)"
-              : "linear-gradient(135deg, #6366f1, #4f46e5)",
-            cursor: "pointer",
-            userSelect: "none",
+            fontSize: "2rem",
+            boxShadow: isCurrentPlayerSpeaking
+              ? "0 8px 32px rgba(16, 185, 129, 0.5)"
+              : "0 8px 32px rgba(239, 68, 68, 0.5)",
+            position: "relative",
+            overflow: "visible",
           }}
-          onClick={toggleMicrophone}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
           animate={
             isCurrentPlayerSpeaking
               ? {
                   boxShadow: [
-                    "0 10px 30px rgba(239, 68, 68, 0.3)",
-                    "0 15px 40px rgba(239, 68, 68, 0.6)",
-                    "0 10px 30px rgba(239, 68, 68, 0.3)",
+                    "0 8px 32px rgba(16, 185, 129, 0.5)",
+                    "0 12px 40px rgba(16, 185, 129, 0.7)",
+                    "0 8px 32px rgba(16, 185, 129, 0.5)",
                   ],
                 }
               : {}
           }
           transition={{
-            duration: 1,
+            duration: 1.5,
             repeat: isCurrentPlayerSpeaking ? Infinity : 0,
           }}
         >
-          <span style={{ fontSize: "2rem" }}>
-            {isCurrentPlayerSpeaking ? "🔴" : "🎤"}
-          </span>
-          <span>{isCurrentPlayerSpeaking ? "Mic ON" : "Mic OFF"}</span>
-        </motion.button>
-
-        {hasOtherSpeakers && (
-          <motion.div
+          <span
             style={{
-              marginTop: "1rem",
-              padding: "1rem",
-              background: "rgba(16, 185, 129, 0.1)",
-              borderRadius: "8px",
-              border: "1px solid rgba(16, 185, 129, 0.3)",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: "0.75rem",
+              position: "relative",
+              filter: isCurrentPlayerSpeaking ? "none" : "brightness(0.8)",
             }}
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
           >
-            <SoundWave />
-            <p
-              style={{
-                color: "var(--success-color)",
-                fontSize: "0.9rem",
-                margin: 0,
-              }}
-            >
-              <strong>{otherSpeakers.join(", ")}</strong>{" "}
-              {otherSpeakers.length === 1 ? "is" : "are"} speaking
-            </p>
-          </motion.div>
-        )}
+            🎤
+            {!isCurrentPlayerSpeaking && (
+              <span
+                style={{
+                  position: "absolute",
+                  top: "50%",
+                  left: "50%",
+                  transform: "translate(-50%, -50%) rotate(45deg)",
+                  width: "120%",
+                  height: "3px",
+                  background: "#fff",
+                  borderRadius: "2px",
+                }}
+              />
+            )}
+          </span>
+        </motion.button>
+      </motion.div>
 
-        <p
+      {/* Floating speaker indicator when others are speaking */}
+      {hasOtherSpeakers && (
+        <motion.div
           style={{
-            marginTop: "1rem",
-            color: "var(--text-secondary)",
-            fontSize: "0.85rem",
+            position: "fixed",
+            bottom: "2rem",
+            left: "6rem",
+            zIndex: 999,
+            background: "rgba(16, 185, 129, 0.95)",
+            padding: "0.75rem 1rem",
+            borderRadius: "12px",
+            display: "flex",
+            alignItems: "center",
+            gap: "0.75rem",
+            boxShadow: "0 8px 32px rgba(16, 185, 129, 0.4)",
           }}
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -20 }}
         >
-          {isCurrentPlayerSpeaking
-            ? "Click to turn off microphone"
-            : "Click to turn on microphone"}
-        </p>
-      </div>
+          <SoundWave />
+          <span
+            style={{
+              color: "#fff",
+              fontSize: "0.875rem",
+              fontWeight: "600",
+            }}
+          >
+            {otherSpeakers.join(", ")}{" "}
+            {otherSpeakers.length === 1 ? "is" : "are"} speaking
+          </span>
+        </motion.div>
+      )}
 
       {/* Hidden audio elements for remote streams */}
       {team?.players
@@ -407,7 +411,7 @@ const VoiceChat = ({ socket, teamId, playerId, team, activeSpeakers }) => {
             style={{ display: "none" }}
           />
         ))}
-    </motion.div>
+    </>
   );
 };
 

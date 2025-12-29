@@ -18,14 +18,14 @@ const FlipCard = ({ word, isImposter }) => {
       <div className="flip-card-inner">
         <div className="flip-card-front">
           <div style={{ textAlign: "center" }}>
-            <div style={{ fontSize: "4rem", marginBottom: "1rem" }}>🎭</div>
+            <div style={{ fontSize: "2.5rem", marginBottom: "0.5rem" }}>🎭</div>
             <div>Your Word</div>
           </div>
         </div>
         <div className={`flip-card-back ${isImposter ? "imposter" : ""}`}>
-          <div style={{ textAlign: "center", padding: "2rem" }}>
+          <div style={{ textAlign: "center", padding: "1.5rem" }}>
             {isImposter && (
-              <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>🕵️</div>
+              <div style={{ fontSize: "2rem", marginBottom: "0.5rem" }}>🕵️</div>
             )}
             <div style={{ wordBreak: "break-word" }}>{word}</div>
           </div>
@@ -54,188 +54,205 @@ const Game = ({
   const teamId = team?.id;
 
   return (
-    <div className="container">
-      <motion.div
-        className="card"
-        style={{ marginTop: "2rem", maxWidth: "700px", margin: "2rem auto" }}
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.5 }}
+    <>
+      <div
+        className="container"
+        style={{ padding: "1rem", maxHeight: "100vh", overflow: "hidden" }}
       >
-        <div style={{ textAlign: "center", marginBottom: "2rem" }}>
-          <h2
-            style={{
-              fontSize: "2rem",
-              background: "linear-gradient(135deg, #fbbf24, #f59e0b)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-            }}
-          >
-            🎮 Game in Progress
-          </h2>
-        </div>
-
-        <FlipCard word={word} isImposter={isImposter} />
-
         <motion.div
+          className="card"
           style={{
-            textAlign: "center",
-            marginTop: "2rem",
+            maxWidth: "700px",
+            margin: "0 auto",
             padding: "1.5rem",
-            background: isImposter
-              ? "rgba(239, 68, 68, 0.1)"
-              : "rgba(16, 185, 129, 0.1)",
-            borderRadius: "12px",
-            border: `1px solid ${
-              isImposter ? "rgba(239, 68, 68, 0.3)" : "rgba(16, 185, 129, 0.3)"
-            }`,
+            maxHeight: "calc(100vh - 2rem)",
+            overflowY: "auto",
           }}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1 }}
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5 }}
         >
-          <p
-            style={{
-              fontSize: "1.2rem",
-              fontWeight: "bold",
-              color: isImposter
-                ? "var(--danger-color)"
-                : "var(--success-color)",
-            }}
-          >
-            {isImposter
-              ? "🕵️ You are the IMPOSTER!"
-              : "✨ You are a normal player!"}
-          </p>
-          <p
-            style={{
-              marginTop: "0.5rem",
-              color: "var(--text-secondary)",
-              fontSize: "0.95rem",
-            }}
-          >
-            {isImposter
-              ? "Try to blend in without knowing the secret word!"
-              : "Try to identify who doesn't know the word!"}
-          </p>
-        </motion.div>
-
-        <VoiceChat
-          socket={socket}
-          teamId={teamId}
-          playerId={playerId}
-          team={team}
-          activeSpeakers={activeSpeakers}
-        />
-
-        <motion.div
-          style={{ marginTop: "2rem" }}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.5 }}
-        >
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginBottom: "1rem",
-              padding: "1rem",
-              background: "rgba(99, 102, 241, 0.1)",
-              borderRadius: "12px",
-            }}
-          >
-            <span style={{ color: "var(--text-secondary)" }}>
-              Players ready to reveal:
-            </span>
-            <span
+          <div style={{ textAlign: "center", marginBottom: "1rem" }}>
+            <h2
               style={{
-                fontWeight: "bold",
-                fontSize: "1.3rem",
-                color: "var(--primary-color)",
+                fontSize: "1.5rem",
+                background: "linear-gradient(135deg, #fbbf24, #f59e0b)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
               }}
             >
-              {revealedCount} / {totalPlayers}
-            </span>
+              🎮 Game in Progress
+            </h2>
           </div>
 
-          {!allRevealed ? (
-            <motion.button
-              className="btn btn-danger"
-              style={{ width: "100%" }}
-              onClick={onRevealVote}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              animate={{
-                boxShadow: [
-                  "0 10px 30px rgba(239, 68, 68, 0.3)",
-                  "0 15px 40px rgba(239, 68, 68, 0.5)",
-                  "0 10px 30px rgba(239, 68, 68, 0.3)",
-                ],
-              }}
-              transition={{ duration: 2, repeat: Infinity }}
-            >
-              🔍 Ready to Reveal Imposter
-            </motion.button>
-          ) : (
-            <motion.button
-              className="btn btn-success"
-              style={{ width: "100%" }}
-              onClick={onNewRound}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 5.5 }}
-            >
-              🔄 Start New Round
-            </motion.button>
-          )}
-        </motion.div>
+          <FlipCard word={word} isImposter={isImposter} />
 
-        <motion.div
-          style={{ marginTop: "2rem" }}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 2 }}
-        >
-          <h3
+          <motion.div
             style={{
-              marginBottom: "1rem",
-              color: "var(--text-secondary)",
-              fontSize: "1rem",
+              textAlign: "center",
+              marginTop: "1rem",
+              padding: "1rem",
+              background: isImposter
+                ? "rgba(239, 68, 68, 0.1)"
+                : "rgba(16, 185, 129, 0.1)",
+              borderRadius: "12px",
+              border: `1px solid ${
+                isImposter
+                  ? "rgba(239, 68, 68, 0.3)"
+                  : "rgba(16, 185, 129, 0.3)"
+              }`,
             }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1 }}
           >
-            👥 Players in this game:
-          </h3>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))",
-              gap: "0.5rem",
-            }}
+            <p
+              style={{
+                fontSize: "1rem",
+                fontWeight: "bold",
+                color: isImposter
+                  ? "var(--danger-color)"
+                  : "var(--success-color)",
+                marginBottom: "0.25rem",
+              }}
+            >
+              {isImposter
+                ? "🕵️ You are the IMPOSTER!"
+                : "✨ You are a normal player!"}
+            </p>
+            <p
+              style={{
+                marginTop: "0.25rem",
+                color: "var(--text-secondary)",
+                fontSize: "0.85rem",
+              }}
+            >
+              {isImposter
+                ? "Try to blend in without knowing the secret word!"
+                : "Try to identify who doesn't know the word!"}
+            </p>
+          </motion.div>
+
+          <motion.div
+            style={{ marginTop: "1rem" }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1.5 }}
           >
-            {team?.players.map((player) => (
-              <motion.div
-                key={player.id}
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: "0.75rem",
+                padding: "0.75rem",
+                background: "rgba(99, 102, 241, 0.1)",
+                borderRadius: "12px",
+              }}
+            >
+              <span
+                style={{ color: "var(--text-secondary)", fontSize: "0.9rem" }}
+              >
+                Players ready to reveal:
+              </span>
+              <span
                 style={{
-                  padding: "0.75rem",
-                  background: "rgba(99, 102, 241, 0.1)",
-                  borderRadius: "8px",
-                  textAlign: "center",
-                  fontSize: "0.9rem",
+                  fontWeight: "bold",
+                  fontSize: "1.1rem",
+                  color: "var(--primary-color)",
                 }}
+              >
+                {revealedCount} / {totalPlayers}
+              </span>
+            </div>
+
+            {!allRevealed ? (
+              <motion.button
+                className="btn btn-danger"
+                style={{ width: "100%" }}
+                onClick={onRevealVote}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                animate={{
+                  boxShadow: [
+                    "0 10px 30px rgba(239, 68, 68, 0.3)",
+                    "0 15px 40px rgba(239, 68, 68, 0.5)",
+                    "0 10px 30px rgba(239, 68, 68, 0.3)",
+                  ],
+                }}
+                transition={{ duration: 2, repeat: Infinity }}
+              >
+                🔍 Ready to Reveal Imposter
+              </motion.button>
+            ) : (
+              <motion.button
+                className="btn btn-success"
+                style={{ width: "100%" }}
+                onClick={onNewRound}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
-                whileHover={{ scale: 1.05 }}
+                transition={{ delay: 5.5 }}
               >
-                {player.name}
-              </motion.div>
-            ))}
-          </div>
+                🔄 Start New Round
+              </motion.button>
+            )}
+          </motion.div>
+
+          <motion.div
+            style={{ marginTop: "1rem" }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 2 }}
+          >
+            <h3
+              style={{
+                marginBottom: "0.75rem",
+                color: "var(--text-secondary)",
+                fontSize: "0.9rem",
+              }}
+            >
+              👥 Players in this game:
+            </h3>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))",
+                gap: "0.5rem",
+              }}
+            >
+              {team?.players.map((player) => (
+                <motion.div
+                  key={player.id}
+                  style={{
+                    padding: "0.5rem",
+                    background: "rgba(99, 102, 241, 0.1)",
+                    borderRadius: "8px",
+                    textAlign: "center",
+                    fontSize: "0.85rem",
+                  }}
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  whileHover={{ scale: 1.05 }}
+                >
+                  {player.name}
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
         </motion.div>
-      </motion.div>
-    </div>
+      </div>
+
+      {/* Floating voice chat component */}
+      <VoiceChat
+        socket={socket}
+        teamId={teamId}
+        playerId={playerId}
+        team={team}
+        activeSpeakers={activeSpeakers}
+      />
+    </>
   );
 };
 
