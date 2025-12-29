@@ -94,8 +94,6 @@ const Game = ({
           paddingLeft: "1rem",
           paddingRight: "1rem",
           paddingBottom: "1rem",
-          maxHeight: "100vh",
-          overflow: "auto",
         }}
       >
         <motion.div
@@ -104,8 +102,6 @@ const Game = ({
             maxWidth: "700px",
             margin: "0 auto",
             padding: "1.5rem",
-            maxHeight: "calc(100vh - 2rem)",
-            overflowY: "auto",
           }}
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
