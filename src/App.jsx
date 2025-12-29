@@ -524,12 +524,12 @@ function App() {
       <div className="online-counter">
         <div className="counter-item">
           <span className="online-dot"></span>
-          <span className="online-count">{onlinePlayers} Online</span>
+          <span className="online-count">👤 {onlinePlayers}</span>
         </div>
         <div className="counter-divider"></div>
         <div className="counter-item">
           <span className="team-icon">🎮</span>
-          <span className="online-count">{activeTeams} Teams</span>
+          <span className="online-count">{activeTeams}</span>
         </div>
       </div>
 
