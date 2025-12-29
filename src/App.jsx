@@ -365,6 +365,7 @@ function App() {
               onNewRound={handleLudoNewRound}
               onSkipTurn={handleLudoSkipTurn}
               hasValidMoves={hasValidMoves}
+              activeSpeakers={activeSpeakers}
             />
           )}
         </>

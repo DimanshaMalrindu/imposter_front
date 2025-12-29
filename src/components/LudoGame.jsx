@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import LudoBoard from "./LudoBoard";
+import VoiceChat from "./VoiceChat";
+import socketService from "../services/socketService";
 
 const LudoGame = ({
   team,
@@ -10,6 +12,7 @@ const LudoGame = ({
   onNewRound,
   onSkipTurn,
   hasValidMoves,
+  activeSpeakers,
 }) => {
   const [selectedPawn, setSelectedPawn] = useState(null);
   const [skipCountdown, setSkipCountdown] = useState(null);
@@ -284,6 +287,15 @@ const LudoGame = ({
           </motion.div>
         )}
       </motion.div>
+
+      {/* Voice Chat */}
+      <VoiceChat
+        socket={socketService.getSocket()}
+        teamId={team.id}
+        playerId={playerId}
+        team={team}
+        activeSpeakers={activeSpeakers}
+      />
     </div>
   );
 };
