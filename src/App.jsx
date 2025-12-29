@@ -116,16 +116,7 @@ function App() {
     socket.on("reveal-imposter", (data) => {
       setShowReveal(true);
       setIsImposter(data.isImposter);
-
-      // Find and set imposter name from team
-      if (team && data.imposterId) {
-        const imposterPlayer = team.players.find(
-          (p) => p.id === data.imposterId
-        );
-        if (imposterPlayer) {
-          setImposterName(imposterPlayer.name);
-        }
-      }
+      setImposterName(data.imposterName || "Unknown");
 
       setTimeout(() => {
         setShowReveal(false);
