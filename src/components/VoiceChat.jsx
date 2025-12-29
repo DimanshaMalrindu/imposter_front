@@ -1,41 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 
-// Sound wave component
-const SoundWave = () => {
-  return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: "3px",
-        height: "30px",
-      }}
-    >
-      {[0, 1, 2, 3, 4].map((i) => (
-        <motion.div
-          key={i}
-          style={{
-            width: "3px",
-            background: "linear-gradient(180deg, #10b981, #059669)",
-            borderRadius: "2px",
-          }}
-          animate={{
-            height: ["15px", "30px", "12px", "26px", "15px"],
-          }}
-          transition={{
-            duration: 1,
-            repeat: Infinity,
-            delay: i * 0.1,
-            ease: "easeInOut",
-          }}
-        />
-      ))}
-    </div>
-  );
-};
-
 const VoiceChat = ({
   socket,
   teamId,
@@ -56,13 +21,6 @@ const VoiceChat = ({
 
   // Check if current player is speaking
   const isCurrentPlayerSpeaking = activeSpeakers?.includes(playerId) || false;
-
-  // Get names of other speakers
-  const otherSpeakers =
-    team?.players
-      .filter((p) => activeSpeakers?.includes(p.id) && p.id !== playerId)
-      .map((p) => p.name) || [];
-  const hasOtherSpeakers = otherSpeakers.length > 0;
 
   // Helper to get event name with optional prefix
   const getEventName = (eventName) => {
@@ -196,36 +154,48 @@ const VoiceChat = ({
 
   // Toggle microphone on/off
   const toggleMicrophone = async () => {
-    // If currently speaking, turn off the mic
+    // If currently speaking, turn off the mic (mute)
     if (isCurrentPlayerSpeaking) {
       setIsSpeaking(false);
       socket.emit(getEventName("stop-speaking"), { teamId, playerId });
 
-      // Close all peer connections
-      peerConnectionsRef.current.forEach((pc) => pc.close());
-      peerConnectionsRef.current.clear();
+      // Disable the audio track (mute) instead of closing connections
+      // This allows the player to continue hearing others
+      if (localStreamRef.current) {
+        localStreamRef.current.getAudioTracks().forEach((track) => {
+          track.enabled = false;
+        });
+      }
     } else {
-      // Turn on the mic
+      // Turn on the mic (unmute)
       const stream = localStreamRef.current || (await initMicrophone());
       if (!stream) return;
+
+      // Enable the audio track (unmute)
+      stream.getAudioTracks().forEach((track) => {
+        track.enabled = true;
+      });
 
       setIsSpeaking(true);
       socket.emit(getEventName("start-speaking"), { teamId, playerId });
 
-      // Create peer connections with all other players
+      // Only create new peer connections if they don't exist yet
       const otherPlayers = team.players.filter((p) => p.id !== playerId);
       for (const player of otherPlayers) {
-        const pc = createPeerConnection(player.socketId, stream);
-        peerConnectionsRef.current.set(player.socketId, pc);
+        // Check if peer connection already exists
+        if (!peerConnectionsRef.current.has(player.socketId)) {
+          const pc = createPeerConnection(player.socketId, stream);
+          peerConnectionsRef.current.set(player.socketId, pc);
 
-        // Create and send offer
-        const offer = await pc.createOffer();
-        await pc.setLocalDescription(offer);
-        socket.emit(getEventName("voice-offer"), {
-          teamId,
-          offer,
-          targetSocketId: player.socketId,
-        });
+          // Create and send offer
+          const offer = await pc.createOffer();
+          await pc.setLocalDescription(offer);
+          socket.emit(getEventName("voice-offer"), {
+            teamId,
+            offer,
+            targetSocketId: player.socketId,
+          });
+        }
       }
     }
   };
@@ -241,6 +211,11 @@ const VoiceChat = ({
         console.error("No local stream available to answer offer");
         return;
       }
+
+      // Mute the track initially (user needs to unmute to speak)
+      stream.getAudioTracks().forEach((track) => {
+        track.enabled = false;
+      });
 
       const pc = createPeerConnection(senderSocketId, stream);
       peerConnectionsRef.current.set(senderSocketId, pc);
@@ -280,6 +255,20 @@ const VoiceChat = ({
       socket.off(getEventName("voice-ice-candidate"), handleIceCandidate);
     };
   }, [socket, teamId, eventPrefix]);
+
+  // Initialize microphone on mount (muted by default)
+  useEffect(() => {
+    const init = async () => {
+      const stream = await initMicrophone();
+      if (stream) {
+        // Start with microphone muted
+        stream.getAudioTracks().forEach((track) => {
+          track.enabled = false;
+        });
+      }
+    };
+    init();
+  }, []);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -370,41 +359,7 @@ const VoiceChat = ({
         </motion.button>
       </motion.div>
 
-      {/* Floating speaker indicator when others are speaking */}
-      {hasOtherSpeakers && (
-        <motion.div
-          style={{
-            position: "fixed",
-            bottom: "2rem",
-            left: "6rem",
-            zIndex: 999,
-            background: "rgba(16, 185, 129, 0.95)",
-            padding: "0.75rem 1rem",
-            borderRadius: "12px",
-            display: "flex",
-            alignItems: "center",
-            gap: "0.75rem",
-            boxShadow: "0 8px 32px rgba(16, 185, 129, 0.4)",
-          }}
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -20 }}
-        >
-          <SoundWave />
-          <span
-            style={{
-              color: "#fff",
-              fontSize: "0.875rem",
-              fontWeight: "600",
-            }}
-          >
-            {otherSpeakers.join(", ")}{" "}
-            {otherSpeakers.length === 1 ? "is" : "are"} speaking
-          </span>
-        </motion.div>
-      )}
-
-      {/* Hidden audio elements for remote streams */}
+      {/* Hidden audio elements for remote streams */
       {team?.players
         .filter((p) => p.id !== playerId)
         .map((player) => (
