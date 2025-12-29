@@ -245,23 +245,23 @@ const LudoBoard = ({ team, playerId, onPawnClick, isGameStarted }) => {
     const playersWithColor = team.players.filter((p) => p.color === color);
     const hasPlayers = playersWithColor.length > 0;
 
-    // Home area positions in grid (6x6 areas in corners)
+    // Home area positions in grid (5x5 areas in corners)
     const homeAreas = {
       red: { startRow: 0, startCol: 0 },
-      green: { startRow: 0, startCol: 9 },
-      yellow: { startRow: 9, startCol: 9 },
-      blue: { startRow: 9, startCol: 0 },
+      green: { startRow: 0, startCol: 10 },
+      yellow: { startRow: 10, startCol: 10 },
+      blue: { startRow: 10, startCol: 0 },
     };
 
     const home = homeAreas[color];
     const cellSize = 100 / 15;
 
-    // 4 pawn slots in 2x2 arrangement within the 6x6 home
+    // 4 pawn slots in 2x2 arrangement within the 5x5 home
     const pawnSlots = [
-      { row: home.startRow + 2, col: home.startCol + 2 },
-      { row: home.startRow + 2, col: home.startCol + 4 },
-      { row: home.startRow + 4, col: home.startCol + 2 },
-      { row: home.startRow + 4, col: home.startCol + 4 },
+      { row: home.startRow + 1.5, col: home.startCol + 1.5 },
+      { row: home.startRow + 1.5, col: home.startCol + 3.5 },
+      { row: home.startRow + 3.5, col: home.startCol + 1.5 },
+      { row: home.startRow + 3.5, col: home.startCol + 3.5 },
     ];
 
     return (
@@ -272,8 +272,8 @@ const LudoBoard = ({ team, playerId, onPawnClick, isGameStarted }) => {
             position: "absolute",
             left: `${home.startCol * cellSize}%`,
             top: `${home.startRow * cellSize}%`,
-            width: `${6 * cellSize}%`,
-            height: `${6 * cellSize}%`,
+            width: `${5 * cellSize}%`,
+            height: `${5 * cellSize}%`,
             background: `linear-gradient(145deg, ${colors[color]}, ${colors[color]}dd)`,
             border: `4px solid ${colors[color]}`,
             borderRadius: "12px",
@@ -399,7 +399,8 @@ const LudoBoard = ({ team, playerId, onPawnClick, isGameStarted }) => {
                 borderBottom: `2px solid ${colors.red}`,
                 borderLeft: `2px solid ${colors.red}`,
               };
-              cellShadow = "inset 0 3px 6px rgba(0,0,0,0.2), inset 0 -2px 4px rgba(255,255,255,0.4), 0 2px 4px rgba(0,0,0,0.15)";
+              cellShadow =
+                "inset 0 3px 6px rgba(0,0,0,0.2), inset 0 -2px 4px rgba(255,255,255,0.4), 0 2px 4px rgba(0,0,0,0.15)";
             } else if (rowIndex === 6 && colIndex === 8) {
               bgColor = `linear-gradient(135deg, ${colors.green} 50%, ${colors.yellow} 50%)`;
               borderColor = colors.green;
@@ -409,7 +410,8 @@ const LudoBoard = ({ team, playerId, onPawnClick, isGameStarted }) => {
                 borderBottom: `2px solid ${colors.yellow}`,
                 borderLeft: `2px solid ${colors.green}`,
               };
-              cellShadow = "inset 0 3px 6px rgba(0,0,0,0.2), inset 0 -2px 4px rgba(255,255,255,0.4), 0 2px 4px rgba(0,0,0,0.15)";
+              cellShadow =
+                "inset 0 3px 6px rgba(0,0,0,0.2), inset 0 -2px 4px rgba(255,255,255,0.4), 0 2px 4px rgba(0,0,0,0.15)";
             } else if (rowIndex === 8 && colIndex === 8) {
               bgColor = `linear-gradient(225deg, ${colors.yellow} 50%, ${colors.blue} 50%)`;
               borderColor = colors.yellow;
@@ -419,7 +421,8 @@ const LudoBoard = ({ team, playerId, onPawnClick, isGameStarted }) => {
                 borderBottom: `2px solid ${colors.blue}`,
                 borderLeft: `2px solid ${colors.blue}`,
               };
-              cellShadow = "inset 0 3px 6px rgba(0,0,0,0.2), inset 0 -2px 4px rgba(255,255,255,0.4), 0 2px 4px rgba(0,0,0,0.15)";
+              cellShadow =
+                "inset 0 3px 6px rgba(0,0,0,0.2), inset 0 -2px 4px rgba(255,255,255,0.4), 0 2px 4px rgba(0,0,0,0.15)";
             } else if (rowIndex === 8 && colIndex === 6) {
               bgColor = `linear-gradient(135deg, ${colors.red} 50%, ${colors.blue} 50%)`;
               borderColor = colors.red;
@@ -429,7 +432,8 @@ const LudoBoard = ({ team, playerId, onPawnClick, isGameStarted }) => {
                 borderBottom: `2px solid ${colors.blue}`,
                 borderLeft: `2px solid ${colors.red}`,
               };
-              cellShadow = "inset 0 3px 6px rgba(0,0,0,0.2), inset 0 -2px 4px rgba(255,255,255,0.4), 0 2px 4px rgba(0,0,0,0.15)";
+              cellShadow =
+                "inset 0 3px 6px rgba(0,0,0,0.2), inset 0 -2px 4px rgba(255,255,255,0.4), 0 2px 4px rgba(0,0,0,0.15)";
             } else if (rowIndex === 7 && colIndex === 7) {
               // Center cell - pyramid top view with all four colors
               bgColor = `conic-gradient(from 45deg, ${colors.yellow} 0deg 90deg, ${colors.blue} 90deg 180deg, ${colors.red} 180deg 270deg, ${colors.green} 270deg 360deg)`;
@@ -440,7 +444,8 @@ const LudoBoard = ({ team, playerId, onPawnClick, isGameStarted }) => {
                 borderBottom: `2px solid ${colors.blue}`,
                 borderLeft: `2px solid ${colors.red}`,
               };
-              cellShadow = "inset 0 5px 10px rgba(0,0,0,0.3), inset 0 -3px 8px rgba(255,255,255,0.4), 0 4px 8px rgba(0,0,0,0.5)";
+              cellShadow =
+                "inset 0 5px 10px rgba(0,0,0,0.3), inset 0 -3px 8px rgba(255,255,255,0.4), 0 4px 8px rgba(0,0,0,0.5)";
             } else if (cell.type === "path" || cell.type === "start") {
               bgColor = cell.color ? `${colors[cell.color]}` : "#fff";
               borderColor = cell.color ? colors[cell.color] : "#ccc";
@@ -453,14 +458,18 @@ const LudoBoard = ({ team, playerId, onPawnClick, isGameStarted }) => {
               cellShadow =
                 "inset 0 3px 6px rgba(245,158,11,0.3), inset 0 -2px 4px rgba(255,255,255,0.6)";
             } else if (cell.type === "home-stretch") {
-              bgColor = `${colors[cell.color]}`;
+              bgColor = `linear-gradient(145deg, ${colors[cell.color]}ee, ${colors[cell.color]}cc)`;
               borderColor = colors[cell.color];
-              cellShadow = `inset 0 4px 8px rgba(0,0,0,0.25), inset 0 -3px 6px rgba(255,255,255,0.3), 0 2px 5px rgba(0,0,0,0.2)`;
+              cellShadow = `inset 0 2px 6px rgba(0,0,0,0.15), inset 0 -2px 4px rgba(255,255,255,0.4), 0 1px 3px ${colors[cell.color]}60`;
             } else if (cell.type === "center") {
               bgColor = "linear-gradient(145deg, #fbbf24, #f59e0b)";
               borderColor = "#dc2626";
               cellShadow =
                 "inset 0 5px 10px rgba(0,0,0,0.3), inset 0 -3px 8px rgba(255,255,255,0.4), 0 4px 8px rgba(220,38,38,0.5)";
+            } else if (cell.type === "empty") {
+              // Empty cells - no border
+              borderColor = "transparent";
+              cellShadow = "none";
             }
 
             return (
