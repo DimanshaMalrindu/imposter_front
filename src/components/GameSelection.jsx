@@ -15,7 +15,7 @@ const GameSelection = ({ onSelectGame }) => {
       name: "UNO",
       icon: "🃏",
       color: "#f59e0b",
-      status: "Coming Soon",
+      status: "Available",
     },
     {
       id: "imposter",

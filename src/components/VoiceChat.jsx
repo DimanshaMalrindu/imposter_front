@@ -36,7 +36,14 @@ const SoundWave = () => {
   );
 };
 
-const VoiceChat = ({ socket, teamId, playerId, team, activeSpeakers }) => {
+const VoiceChat = ({
+  socket,
+  teamId,
+  playerId,
+  team,
+  activeSpeakers,
+  eventPrefix = "",
+}) => {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [localStream, setLocalStream] = useState(null);
   const peerConnectionsRef = useRef(new Map());
@@ -56,6 +63,11 @@ const VoiceChat = ({ socket, teamId, playerId, team, activeSpeakers }) => {
       .filter((p) => activeSpeakers?.includes(p.id) && p.id !== playerId)
       .map((p) => p.name) || [];
   const hasOtherSpeakers = otherSpeakers.length > 0;
+
+  // Helper to get event name with optional prefix
+  const getEventName = (eventName) => {
+    return eventPrefix ? `${eventPrefix}-${eventName}` : eventName;
+  };
 
   // Initialize microphone
   const initMicrophone = async () => {
@@ -163,7 +175,7 @@ const VoiceChat = ({ socket, teamId, playerId, team, activeSpeakers }) => {
     // Handle ICE candidates
     pc.onicecandidate = (event) => {
       if (event.candidate) {
-        socket.emit("voice-ice-candidate", {
+        socket.emit(getEventName("voice-ice-candidate"), {
           teamId,
           candidate: event.candidate,
           targetSocketId,
@@ -187,7 +199,7 @@ const VoiceChat = ({ socket, teamId, playerId, team, activeSpeakers }) => {
     // If currently speaking, turn off the mic
     if (isCurrentPlayerSpeaking) {
       setIsSpeaking(false);
-      socket.emit("stop-speaking", { teamId, playerId });
+      socket.emit(getEventName("stop-speaking"), { teamId, playerId });
 
       // Close all peer connections
       peerConnectionsRef.current.forEach((pc) => pc.close());
@@ -198,7 +210,7 @@ const VoiceChat = ({ socket, teamId, playerId, team, activeSpeakers }) => {
       if (!stream) return;
 
       setIsSpeaking(true);
-      socket.emit("start-speaking", { teamId, playerId });
+      socket.emit(getEventName("start-speaking"), { teamId, playerId });
 
       // Create peer connections with all other players
       const otherPlayers = team.players.filter((p) => p.id !== playerId);
@@ -209,7 +221,7 @@ const VoiceChat = ({ socket, teamId, playerId, team, activeSpeakers }) => {
         // Create and send offer
         const offer = await pc.createOffer();
         await pc.setLocalDescription(offer);
-        socket.emit("voice-offer", {
+        socket.emit(getEventName("voice-offer"), {
           teamId,
           offer,
           targetSocketId: player.socketId,
@@ -237,7 +249,7 @@ const VoiceChat = ({ socket, teamId, playerId, team, activeSpeakers }) => {
       const answer = await pc.createAnswer();
       await pc.setLocalDescription(answer);
 
-      socket.emit("voice-answer", {
+      socket.emit(getEventName("voice-answer"), {
         teamId,
         answer,
         targetSocketId: senderSocketId,
@@ -258,16 +270,16 @@ const VoiceChat = ({ socket, teamId, playerId, team, activeSpeakers }) => {
       }
     };
 
-    socket.on("voice-offer", handleVoiceOffer);
-    socket.on("voice-answer", handleVoiceAnswer);
-    socket.on("voice-ice-candidate", handleIceCandidate);
+    socket.on(getEventName("voice-offer"), handleVoiceOffer);
+    socket.on(getEventName("voice-answer"), handleVoiceAnswer);
+    socket.on(getEventName("voice-ice-candidate"), handleIceCandidate);
 
     return () => {
-      socket.off("voice-offer", handleVoiceOffer);
-      socket.off("voice-answer", handleVoiceAnswer);
-      socket.off("voice-ice-candidate", handleIceCandidate);
+      socket.off(getEventName("voice-offer"), handleVoiceOffer);
+      socket.off(getEventName("voice-answer"), handleVoiceAnswer);
+      socket.off(getEventName("voice-ice-candidate"), handleIceCandidate);
     };
-  }, [socket, teamId]);
+  }, [socket, teamId, eventPrefix]);
 
   // Cleanup on unmount
   useEffect(() => {

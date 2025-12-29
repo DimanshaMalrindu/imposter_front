@@ -7,6 +7,9 @@ import ImposterReveal from "./components/ImposterReveal";
 import LudoHome from "./components/LudoHome";
 import LudoLobby from "./components/LudoLobby";
 import LudoGame from "./components/LudoGame";
+import UnoHome from "./components/UnoHome";
+import UnoLobby from "./components/UnoLobby";
+import UnoGame from "./components/UnoGame";
 import ErrorPopup from "./components/ErrorPopup";
 import socketService from "./services/socketService";
 import "./index.css";
@@ -33,6 +36,11 @@ function App() {
   const [ludoPlayerId, setLudoPlayerId] = useState(null);
   const [ludoTeam, setLudoTeam] = useState(null);
   const [hasValidMoves, setHasValidMoves] = useState(true);
+
+  // UNO game state
+  const [unoTeamId, setUnoTeamId] = useState(null);
+  const [unoPlayerId, setUnoPlayerId] = useState(null);
+  const [unoTeam, setUnoTeam] = useState(null);
 
   // Shared state
   const [onlinePlayers, setOnlinePlayers] = useState(0);
@@ -186,6 +194,75 @@ function App() {
       setGameState("lobby");
     });
 
+    // UNO game events
+    socket.on("uno-team-created", (data) => {
+      console.log("UNO team created:", data.team);
+      setUnoTeamId(data.teamId);
+      setUnoPlayerId(data.playerId);
+      setUnoTeam(data.team);
+      setGameState("lobby");
+    });
+
+    socket.on("uno-team-joined", (data) => {
+      console.log("UNO team joined:", data);
+      setUnoTeamId(data.teamId);
+      setUnoPlayerId(data.playerId);
+      setUnoTeam(data.team);
+      setGameState("lobby");
+    });
+
+    socket.on("uno-team-updated", (updatedTeam) => {
+      console.log("UNO team updated:", updatedTeam);
+      setUnoTeam(updatedTeam);
+    });
+
+    socket.on("uno-game-started", (data) => {
+      console.log("UNO game started:", data);
+      setUnoTeam(data.team);
+      setGameState("playing");
+    });
+
+    socket.on("uno-card-played", (data) => {
+      console.log("Card played:", data);
+      setUnoTeam(data.team);
+    });
+
+    socket.on("uno-card-drawn", (data) => {
+      console.log("Card drawn:", data);
+      setUnoTeam(data.team);
+    });
+
+    socket.on("uno-turn-skipped", (data) => {
+      console.log("Turn skipped:", data);
+      setUnoTeam(data.team);
+    });
+
+    socket.on("uno-called", (data) => {
+      console.log("UNO called by player:", data.playerId);
+      setUnoTeam(data.team);
+    });
+
+    socket.on("uno-catch-result", (data) => {
+      console.log("UNO catch result:", data);
+      if (data.caught) {
+        setUnoTeam(data.team);
+      }
+    });
+
+    socket.on("uno-new-round-vote", (data) => {
+      console.log("New round vote:", data);
+    });
+
+    socket.on("uno-round-reset", (data) => {
+      console.log("UNO round reset:", data);
+      setUnoTeam(data);
+      setGameState("lobby");
+    });
+
+    socket.on("uno-active-speakers-updated", (data) => {
+      setActiveSpeakers(data.activeSpeakers);
+    });
+
     return () => {
       // Don't disconnect, just remove listeners
       socket.off("online-count");
@@ -207,6 +284,18 @@ function App() {
       socket.off("ludo-turn-skipped");
       socket.off("ludo-new-round-vote");
       socket.off("ludo-round-reset");
+      socket.off("uno-team-created");
+      socket.off("uno-team-joined");
+      socket.off("uno-team-updated");
+      socket.off("uno-game-started");
+      socket.off("uno-card-played");
+      socket.off("uno-card-drawn");
+      socket.off("uno-turn-skipped");
+      socket.off("uno-called");
+      socket.off("uno-catch-result");
+      socket.off("uno-new-round-vote");
+      socket.off("uno-round-reset");
+      socket.off("uno-active-speakers-updated");
     };
   }, []); // Empty dependency array - only run once on mount
 
@@ -290,6 +379,57 @@ function App() {
     });
   };
 
+  // UNO game handlers
+  const handleUnoCreateTeam = (teamName, playerName) => {
+    socketService.emit("uno-create-team", { teamName, playerName });
+  };
+
+  const handleUnoJoinTeam = (teamId, playerName) => {
+    socketService.emit("uno-join-team", { teamId, playerName });
+  };
+
+  const handleUnoStartGame = () => {
+    socketService.emit("uno-start-game", { teamId: unoTeamId });
+  };
+
+  const handleUnoPlayCard = (cardIndex, chosenColor) => {
+    socketService.emit("uno-play-card", {
+      teamId: unoTeamId,
+      playerId: unoPlayerId,
+      cardIndex,
+      chosenColor,
+    });
+  };
+
+  const handleUnoDrawCard = () => {
+    socketService.emit("uno-draw-card", {
+      teamId: unoTeamId,
+      playerId: unoPlayerId,
+    });
+  };
+
+  const handleUnoCallUno = () => {
+    socketService.emit("uno-call-uno", {
+      teamId: unoTeamId,
+      playerId: unoPlayerId,
+    });
+  };
+
+  const handleUnoCatchFailure = (targetPlayerId) => {
+    socketService.emit("uno-catch-failure", {
+      teamId: unoTeamId,
+      accuserId: unoPlayerId,
+      targetPlayerId,
+    });
+  };
+
+  const handleUnoNewRound = () => {
+    socketService.emit("uno-new-round", {
+      teamId: unoTeamId,
+      playerId: unoPlayerId,
+    });
+  };
+
   return (
     <div className="App">
       {/* Online Players Counter */}
@@ -365,6 +505,35 @@ function App() {
               onNewRound={handleLudoNewRound}
               onSkipTurn={handleLudoSkipTurn}
               hasValidMoves={hasValidMoves}
+              activeSpeakers={activeSpeakers}
+            />
+          )}
+        </>
+      )}
+
+      {/* UNO Game Flow */}
+      {selectedGame === "uno" && (
+        <>
+          {gameState === "home" && (
+            <UnoHome
+              onCreateTeam={handleUnoCreateTeam}
+              onJoinTeam={handleUnoJoinTeam}
+            />
+          )}
+
+          {gameState === "lobby" && (
+            <UnoLobby team={unoTeam} onStartGame={handleUnoStartGame} />
+          )}
+
+          {gameState === "playing" && (
+            <UnoGame
+              team={unoTeam}
+              playerId={unoPlayerId}
+              onPlayCard={handleUnoPlayCard}
+              onDrawCard={handleUnoDrawCard}
+              onCallUno={handleUnoCallUno}
+              onCatchUnoFailure={handleUnoCatchFailure}
+              onNewRound={handleUnoNewRound}
               activeSpeakers={activeSpeakers}
             />
           )}
