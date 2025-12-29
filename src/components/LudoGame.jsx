@@ -91,9 +91,28 @@ const LudoGame = ({
               background: "linear-gradient(135deg, #10b981, #059669)",
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "1rem",
             }}
           >
             🎲 Ludo Game in Progress
+            {myPlayer && (
+              <span
+                style={{
+                  fontSize: "1.2rem",
+                  background: colorStyles[myPlayer.color].bg,
+                  color: colorStyles[myPlayer.color].text,
+                  border: `2px solid ${colorStyles[myPlayer.color].border}`,
+                  padding: "0.5rem 1rem",
+                  borderRadius: "8px",
+                  fontWeight: "bold",
+                }}
+              >
+                You: {myPlayer.color.toUpperCase()}
+              </span>
+            )}
           </h2>
         </div>
 

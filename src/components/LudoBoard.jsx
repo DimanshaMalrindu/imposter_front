@@ -185,47 +185,57 @@ const LudoBoard = ({ team, playerId, onPawnClick, isGameStarted }) => {
     const left = (gridPos.col + 0.5) * cellSize;
     const top = (gridPos.row + 0.5) * cellSize;
 
+    // Pawn size should be smaller than cell size for better fit
+    const pawnSize = cellSize * 0.7; // 70% of cell size
+
     const isMyPawn = player.id === playerId;
     const canMove = isGameStarted && team.currentTurn === player.id && isMyPawn;
 
     return (
-      <motion.div
-        key={`${player.id}-${pawnIndex}`}
-        onClick={() =>
-          isMyPawn && onPawnClick ? onPawnClick(pawnIndex) : null
-        }
+      <div
+        key={`${player.id}-${pawnIndex}-wrapper`}
         style={{
           position: "absolute",
           left: `${left}%`,
           top: `${top}%`,
-          width: "5%",
-          height: "5%",
-          background: `linear-gradient(135deg, ${colors[player.color]}, ${
-            colors[player.color]
-          }dd)`,
-          borderRadius: "50%",
-          border: isMyPawn
-            ? "3px solid white"
-            : "2px solid rgba(255,255,255,0.6)",
-          cursor: canMove ? "pointer" : "default",
+          width: `${pawnSize}%`,
+          height: `${pawnSize}%`,
           transform: "translate(-50%, -50%)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          color: "white",
-          fontWeight: "bold",
-          fontSize: "0.7rem",
-          boxShadow: "0 4px 12px rgba(0,0,0,0.5)",
-          zIndex: 20 + position,
-          opacity: isMyPawn ? 1 : 0.85,
         }}
-        whileHover={canMove ? { scale: 1.3 } : {}}
-        whileTap={canMove ? { scale: 0.9 } : {}}
-        animate={canMove ? { scale: [1, 1.1, 1] } : {}}
-        transition={{ duration: 0.6, repeat: Infinity }}
       >
-        {pawnIndex + 1}
-      </motion.div>
+        <motion.div
+          onClick={() =>
+            isMyPawn && onPawnClick ? onPawnClick(pawnIndex) : null
+          }
+          style={{
+            width: "100%",
+            height: "100%",
+            background: `linear-gradient(135deg, ${colors[player.color]}, ${
+              colors[player.color]
+            }dd)`,
+            borderRadius: "50%",
+            border: isMyPawn
+              ? "3px solid white"
+              : "2px solid rgba(255,255,255,0.6)",
+            cursor: canMove ? "pointer" : "default",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "white",
+            fontWeight: "bold",
+            fontSize: "0.7rem",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.5)",
+            zIndex: 20 + position,
+            opacity: isMyPawn ? 1 : 0.85,
+          }}
+          whileHover={canMove ? { scale: 1.3 } : {}}
+          whileTap={canMove ? { scale: 0.9 } : {}}
+          animate={canMove ? { scale: [1, 1.1, 1] } : {}}
+          transition={{ duration: 0.6, repeat: Infinity }}
+        >
+          {pawnIndex + 1}
+        </motion.div>
+      </div>
     );
   };
 
