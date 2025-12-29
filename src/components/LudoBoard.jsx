@@ -41,8 +41,8 @@ const LudoBoard = ({ team, playerId, onPawnClick, isGameStarted }) => {
     pathCells.push({ row: 3, col: 6, color: null, type: "path" }); // 8
     pathCells.push({ row: 2, col: 6, color: null, type: "path" }); // 9
     pathCells.push({ row: 1, col: 6, color: null, type: "path" }); // 10
-    pathCells.push({ row: 0, col: 6, color: null, type: "safe" }); // 11
-    pathCells.push({ row: 0, col: 7, color: null, type: "path" }); // 12
+    pathCells.push({ row: 0, col: 6, color: null, type: "path" }); // 11
+    pathCells.push({ row: 0, col: 7, color: "green", type: "path" }); // 12
     pathCells.push({ row: 0, col: 8, color: "green", type: "start" }); // 13
     pathCells.push({ row: 1, col: 8, color: null, type: "path" }); // 14
     pathCells.push({ row: 2, col: 8, color: null, type: "path" }); // 15
@@ -54,8 +54,8 @@ const LudoBoard = ({ team, playerId, onPawnClick, isGameStarted }) => {
     pathCells.push({ row: 6, col: 11, color: null, type: "path" }); // 21
     pathCells.push({ row: 6, col: 12, color: null, type: "path" }); // 22
     pathCells.push({ row: 6, col: 13, color: null, type: "path" }); // 23
-    pathCells.push({ row: 6, col: 14, color: null, type: "safe" }); // 24
-    pathCells.push({ row: 7, col: 14, color: null, type: "path" }); // 25
+    pathCells.push({ row: 6, col: 14, color: null, type: "path" }); // 24
+    pathCells.push({ row: 7, col: 14, color: "yellow", type: "path" }); // 25
     pathCells.push({ row: 8, col: 14, color: "yellow", type: "start" }); // 26
     pathCells.push({ row: 8, col: 13, color: null, type: "path" }); // 27
     pathCells.push({ row: 8, col: 12, color: null, type: "path" }); // 28
@@ -67,8 +67,8 @@ const LudoBoard = ({ team, playerId, onPawnClick, isGameStarted }) => {
     pathCells.push({ row: 11, col: 8, color: null, type: "path" }); // 34
     pathCells.push({ row: 12, col: 8, color: null, type: "path" }); // 35
     pathCells.push({ row: 13, col: 8, color: null, type: "path" }); // 36
-    pathCells.push({ row: 14, col: 8, color: null, type: "safe" }); // 37
-    pathCells.push({ row: 14, col: 7, color: null, type: "path" }); // 38
+    pathCells.push({ row: 14, col: 8, color: null, type: "path" }); // 37
+    pathCells.push({ row: 14, col: 7, color: "blue", type: "path" }); // 38
     pathCells.push({ row: 14, col: 6, color: "blue", type: "start" }); // 39
     pathCells.push({ row: 13, col: 6, color: null, type: "path" }); // 40
     pathCells.push({ row: 12, col: 6, color: null, type: "path" }); // 41
@@ -80,8 +80,8 @@ const LudoBoard = ({ team, playerId, onPawnClick, isGameStarted }) => {
     pathCells.push({ row: 8, col: 3, color: null, type: "path" }); // 47
     pathCells.push({ row: 8, col: 2, color: null, type: "path" }); // 48
     pathCells.push({ row: 8, col: 1, color: null, type: "path" }); // 49
-    pathCells.push({ row: 8, col: 0, color: null, type: "safe" }); // 50
-    pathCells.push({ row: 7, col: 0, color: null, type: "path" }); // 51
+    pathCells.push({ row: 8, col: 0, color: null, type: "path" }); // 50
+    pathCells.push({ row: 7, col: 0, color: "red", type: "path" }); // 51
 
     pathCells.forEach((cell, index) => {
       grid[cell.row][cell.col] = {

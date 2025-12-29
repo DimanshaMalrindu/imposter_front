@@ -8,7 +8,7 @@ const GameSelection = ({ onSelectGame }) => {
       name: "Ludo",
       icon: "🎲",
       color: "#10b981",
-      status: "Coming Soon",
+      status: "Available",
     },
     {
       id: "uno",
