@@ -1,10 +1,44 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import socketService from "../services/socketService";
 
 const Home = ({ onCreateTeam, onJoinTeam }) => {
   const [mode, setMode] = useState(null);
   const [teamName, setTeamName] = useState("");
   const [playerName, setPlayerName] = useState("");
+
+  useEffect(() => {
+    if (mode === "join") {
+      // Wait a bit for socket to be connected, then request teams
+      const requestTeams = () => {
+        const socket = socketService.getSocket();
+        console.log("Socket status:", socket ? "connected" : "not connected");
+        console.log("Socket ID:", socket?.id);
+
+        if (socket && socket.connected) {
+          console.log("Requesting available teams from server...");
+          socket.emit("get-teams");
+
+          // Listen for teams list
+          const handleTeamsList = (teams) => {
+            console.log("Available teams received:", teams);
+          };
+
+          socket.on("teams-list", handleTeamsList);
+
+          // Cleanup
+          return () => {
+            socket.off("teams-list", handleTeamsList);
+          };
+        } else {
+          console.log("Socket not connected yet, retrying in 500ms...");
+          setTimeout(requestTeams, 500);
+        }
+      };
+
+      requestTeams();
+    }
+  }, [mode]);
 
   const handleSubmit = (e) => {
     e.preventDefault();

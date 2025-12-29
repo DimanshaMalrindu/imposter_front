@@ -8,6 +8,7 @@ class SocketService {
   }
 
   connect() {
+    console.log("Connecting to server at:", SOCKET_URL);
     this.socket = io(SOCKET_URL, {
       transports: ["websocket"],
       reconnection: true,
@@ -16,7 +17,7 @@ class SocketService {
     });
 
     this.socket.on("connect", () => {
-      console.log("Connected to server");
+      console.log("Connected to server with ID:", this.socket.id);
     });
 
     this.socket.on("disconnect", () => {
