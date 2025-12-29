@@ -69,7 +69,7 @@ const GameSelection = ({ onSelectGame }) => {
       name: "Ludo",
       icon: "🎲",
       color: "#10b981",
-      status: "Coming soon",
+      status: "Available",
       launchDate: ludoLaunchDate,
     },
     {
@@ -77,7 +77,7 @@ const GameSelection = ({ onSelectGame }) => {
       name: "UNO",
       icon: "🃏",
       color: "#f59e0b",
-      status: "Coming soon",
+      status: "Available",
       launchDate: unoLaunchDate,
     },
     {

@@ -233,7 +233,7 @@ const LudoBoard = ({ team, playerId, onPawnClick, isGameStarted }) => {
           animate={canMove ? { scale: [1, 1.1, 1] } : {}}
           transition={{ duration: 0.6, repeat: Infinity }}
         >
-          {pawnIndex + 1}
+          ♟
         </motion.div>
       </div>
     );
@@ -349,7 +349,7 @@ const LudoBoard = ({ team, playerId, onPawnClick, isGameStarted }) => {
                   }
                   transition={{ duration: 0.6, repeat: Infinity }}
                 >
-                  {pawnData.pawnIdx + 1}
+                  ♟
                 </motion.div>
               ) : (
                 <div
