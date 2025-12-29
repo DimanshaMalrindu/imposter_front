@@ -3,6 +3,7 @@ import Home from "./components/Home";
 import Lobby from "./components/Lobby";
 import Game from "./components/Game";
 import ImposterReveal from "./components/ImposterReveal";
+import ErrorPopup from "./components/ErrorPopup";
 import socketService from "./services/socketService";
 import "./index.css";
 
@@ -20,6 +21,7 @@ function App() {
   const [showReveal, setShowReveal] = useState(false);
   const [onlinePlayers, setOnlinePlayers] = useState(0);
   const [activeTeams, setActiveTeams] = useState(0);
+  const [errorMessage, setErrorMessage] = useState(null);
 
   useEffect(() => {
     const socket = socketService.connect();
@@ -102,7 +104,7 @@ function App() {
 
     // Error handling
     socket.on("error", (error) => {
-      alert(error.message);
+      setErrorMessage(error.message);
     });
 
     return () => {
@@ -170,6 +172,12 @@ function App() {
       </div>
 
       {showReveal && <ImposterReveal isImposter={isImposter} />}
+
+      {/* Error Popup */}
+      <ErrorPopup
+        message={errorMessage}
+        onClose={() => setErrorMessage(null)}
+      />
 
       {gameState === "home" && (
         <Home onCreateTeam={handleCreateTeam} onJoinTeam={handleJoinTeam} />

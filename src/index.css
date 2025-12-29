@@ -524,3 +524,79 @@ body {
 .developer-credit:hover {
   color: rgba(248, 250, 252, 0.8);
 }
+
+/* Error Popup */
+.error-popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.error-popup {
+  background: linear-gradient(135deg, #2d2a54 0%, #1e1b4b 100%);
+  border: 2px solid rgba(239, 68, 68, 0.5);
+  border-radius: 20px;
+  padding: 2rem;
+  max-width: 400px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(239, 68, 68, 0.3),
+              0 0 0 1px rgba(239, 68, 68, 0.1);
+}
+
+.error-popup-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+  animation: errorShake 0.5s ease;
+}
+
+.error-popup-title {
+  font-size: 1.5rem;
+  color: var(--danger-color);
+  margin-bottom: 1rem;
+  font-weight: bold;
+}
+
+.error-popup-message {
+  color: var(--text-primary);
+  font-size: 1.1rem;
+  margin-bottom: 1.5rem;
+  line-height: 1.5;
+}
+
+.error-popup-button {
+  background: linear-gradient(135deg, var(--danger-color), #dc2626);
+  color: white;
+  border: none;
+  padding: 0.75rem 2.5rem;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+}
+
+.error-popup-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+}
+
+.error-popup-button:active {
+  transform: translateY(0);
+}
+
+@keyframes errorShake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-10px); }
+  75% { transform: translateX(10px); }
+}
