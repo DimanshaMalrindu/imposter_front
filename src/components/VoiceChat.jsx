@@ -60,15 +60,51 @@ const VoiceChat = ({ socket, teamId, playerId, team, activeSpeakers }) => {
   // Initialize microphone
   const initMicrophone = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      // Check if getUserMedia is supported
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        alert(
+          "Your browser doesn't support audio. Please use a modern browser."
+        );
+        return null;
+      }
+
+      // Request microphone with mobile-friendly settings
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+        },
+      });
       setLocalStream(stream);
       localStreamRef.current = stream;
+      console.log("Microphone initialized successfully");
       return stream;
     } catch (error) {
       console.error("Error accessing microphone:", error);
-      alert(
-        "Could not access microphone. Please allow microphone permissions."
-      );
+      let errorMessage = "Could not access microphone. ";
+
+      if (
+        error.name === "NotAllowedError" ||
+        error.name === "PermissionDeniedError"
+      ) {
+        errorMessage +=
+          "Please allow microphone permissions in your browser settings.";
+      } else if (
+        error.name === "NotFoundError" ||
+        error.name === "DevicesNotFoundError"
+      ) {
+        errorMessage += "No microphone found. Please connect a microphone.";
+      } else if (
+        error.name === "NotReadableError" ||
+        error.name === "TrackStartError"
+      ) {
+        errorMessage += "Microphone is already in use by another application.";
+      } else {
+        errorMessage += "Error: " + error.message;
+      }
+
+      alert(errorMessage);
       return null;
     }
   };
@@ -97,10 +133,29 @@ const VoiceChat = ({ socket, teamId, playerId, team, activeSpeakers }) => {
       const [remoteStream] = event.streams;
       console.log("Received remote stream from:", targetSocketId);
       if (audioRefs.current[targetSocketId]) {
-        audioRefs.current[targetSocketId].srcObject = remoteStream;
-        // Ensure audio plays
-        audioRefs.current[targetSocketId].play().catch((e) => {
-          console.error("Error playing audio:", e);
+        const audioElement = audioRefs.current[targetSocketId];
+        audioElement.srcObject = remoteStream;
+
+        // Mobile Safari requires user interaction for audio playback
+        // Try to play and handle potential autoplay restrictions
+        audioElement.play().catch((e) => {
+          console.warn(
+            "Autoplay prevented, will retry on user interaction:",
+            e
+          );
+          // Add a one-time click listener to the document to resume audio
+          const resumeAudio = () => {
+            audioElement
+              .play()
+              .then(() => {
+                console.log("Audio playback resumed for:", targetSocketId);
+                document.removeEventListener("click", resumeAudio);
+                document.removeEventListener("touchstart", resumeAudio);
+              })
+              .catch((err) => console.error("Still cannot play:", err));
+          };
+          document.addEventListener("click", resumeAudio, { once: true });
+          document.addEventListener("touchstart", resumeAudio, { once: true });
         });
       }
     };
@@ -340,9 +395,15 @@ const VoiceChat = ({ socket, teamId, playerId, team, activeSpeakers }) => {
           <audio
             key={player.socketId}
             ref={(el) => {
-              if (el) audioRefs.current[player.socketId] = el;
+              if (el) {
+                audioRefs.current[player.socketId] = el;
+                // Set volume to max for better mobile audio
+                el.volume = 1.0;
+              }
             }}
             autoPlay
+            playsInline
+            controls={false}
             style={{ display: "none" }}
           />
         ))}
