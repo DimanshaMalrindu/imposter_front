@@ -73,6 +73,7 @@ const UnoHome = ({ onCreateTeam, onJoinTeam, onBackToSelection }) => {
     <div className="container">
       {/* Branding Header */}
       <div
+        className="branding-header"
         onClick={onBackToSelection}
         style={{
           position: "fixed",

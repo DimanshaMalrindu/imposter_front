@@ -84,6 +84,7 @@ const LudoGame = ({
     <div className="container">
       {/* Branding Header */}
       <div
+        className="branding-header"
         onClick={onBackToSelection}
         style={{
           position: "fixed",
