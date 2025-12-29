@@ -60,19 +60,19 @@ const LudoGame = ({
   // Auto-skip turn if no valid moves
   useEffect(() => {
     if (isMyTurn && team.diceValue && hasValidMoves === false) {
-      // Start countdown from 3 seconds
-      setSkipCountdown(3);
+      // Start countdown from 1.5 seconds
+      setSkipCountdown(1.5);
 
       const countdownInterval = setInterval(() => {
         setSkipCountdown((prev) => {
-          if (prev <= 1) {
+          if (prev <= 0.5) {
             clearInterval(countdownInterval);
             onSkipTurn();
             return null;
           }
-          return prev - 1;
+          return prev - 0.5;
         });
-      }, 1000);
+      }, 500);
 
       return () => clearInterval(countdownInterval);
     } else {
