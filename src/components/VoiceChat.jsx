@@ -15,10 +15,6 @@ const VoiceChat = ({
   const audioRefs = useRef({});
   const localStreamRef = useRef(null);
 
-  // Get current player's name
-  const currentPlayer = team?.players.find((p) => p.id === playerId);
-  const currentPlayerName = currentPlayer?.name || "Unknown";
-
   // Check if current player is speaking
   const isCurrentPlayerSpeaking = activeSpeakers?.includes(playerId) || false;
 
@@ -359,7 +355,7 @@ const VoiceChat = ({
         </motion.button>
       </motion.div>
 
-      {/* Hidden audio elements for remote streams */
+      {/* Hidden audio elements for remote streams */}
       {team?.players
         .filter((p) => p.id !== playerId)
         .map((player) => (
