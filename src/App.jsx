@@ -1,14 +1,21 @@
 import React, { useState, useEffect } from "react";
+import GameSelection from "./components/GameSelection";
 import Home from "./components/Home";
 import Lobby from "./components/Lobby";
 import Game from "./components/Game";
 import ImposterReveal from "./components/ImposterReveal";
+import LudoHome from "./components/LudoHome";
+import LudoLobby from "./components/LudoLobby";
+import LudoGame from "./components/LudoGame";
 import ErrorPopup from "./components/ErrorPopup";
 import socketService from "./services/socketService";
 import "./index.css";
 
 function App() {
+  const [selectedGame, setSelectedGame] = useState(null); // null, 'ludo', 'uno', 'imposter'
   const [gameState, setGameState] = useState("home"); // home, lobby, playing, revealing
+
+  // Imposter game state
   const [teamId, setTeamId] = useState(null);
   const [playerId, setPlayerId] = useState(null);
   const [team, setTeam] = useState(null);
@@ -19,6 +26,13 @@ function App() {
     totalPlayers: 0,
   });
   const [showReveal, setShowReveal] = useState(false);
+
+  // Ludo game state
+  const [ludoTeamId, setLudoTeamId] = useState(null);
+  const [ludoPlayerId, setLudoPlayerId] = useState(null);
+  const [ludoTeam, setLudoTeam] = useState(null);
+
+  // Shared state
   const [onlinePlayers, setOnlinePlayers] = useState(0);
   const [activeTeams, setActiveTeams] = useState(0);
   const [errorMessage, setErrorMessage] = useState(null);
@@ -107,6 +121,50 @@ function App() {
       setErrorMessage(error.message);
     });
 
+    // Ludo game events
+    socket.on("ludo-team-created", (data) => {
+      console.log("Ludo team created:", data.team);
+      setLudoTeamId(data.teamId);
+      setLudoPlayerId(data.playerId);
+      setLudoTeam(data.team);
+      setGameState("lobby");
+    });
+
+    socket.on("ludo-team-joined", (data) => {
+      console.log("Ludo team joined:", data);
+      setLudoTeamId(data.teamId);
+      setLudoPlayerId(data.playerId);
+      setLudoTeam(data.team);
+      setGameState("lobby");
+    });
+
+    socket.on("ludo-team-updated", (updatedTeam) => {
+      console.log("Ludo team updated:", updatedTeam);
+      setLudoTeam(updatedTeam);
+    });
+
+    socket.on("ludo-game-started", (data) => {
+      console.log("Ludo game started:", data);
+      setLudoTeam(data.team);
+      setGameState("playing");
+    });
+
+    socket.on("ludo-dice-rolled", (data) => {
+      console.log("Dice rolled:", data);
+      setLudoTeam(data.team);
+    });
+
+    socket.on("ludo-pawn-moved", (data) => {
+      console.log("Pawn moved:", data);
+      setLudoTeam(data.team);
+    });
+
+    socket.on("ludo-round-reset", (data) => {
+      console.log("Ludo round reset:", data);
+      setLudoTeam(data.team);
+      setGameState("lobby");
+    });
+
     return () => {
       // Don't disconnect, just remove listeners
       socket.off("online-count");
@@ -119,6 +177,13 @@ function App() {
       socket.off("reveal-imposter");
       socket.off("round-reset");
       socket.off("error");
+      socket.off("ludo-team-created");
+      socket.off("ludo-team-joined");
+      socket.off("ludo-team-updated");
+      socket.off("ludo-game-started");
+      socket.off("ludo-dice-rolled");
+      socket.off("ludo-pawn-moved");
+      socket.off("ludo-round-reset");
     };
   }, []); // Empty dependency array - only run once on mount
 
@@ -156,6 +221,42 @@ function App() {
     socketService.emit("new-round", { teamId });
   };
 
+  const handleSelectGame = (gameId) => {
+    setSelectedGame(gameId);
+  };
+
+  // Ludo game handlers
+  const handleLudoCreateTeam = (teamName, playerName) => {
+    socketService.emit("ludo-create-team", { teamName, playerName });
+  };
+
+  const handleLudoJoinTeam = (teamId, playerName) => {
+    socketService.emit("ludo-join-team", { teamId, playerName });
+  };
+
+  const handleLudoStartGame = () => {
+    socketService.emit("ludo-start-game", { teamId: ludoTeamId });
+  };
+
+  const handleLudoRollDice = () => {
+    socketService.emit("ludo-roll-dice", {
+      teamId: ludoTeamId,
+      playerId: ludoPlayerId,
+    });
+  };
+
+  const handleLudoMovePawn = (pawnIndex) => {
+    socketService.emit("ludo-move-pawn", {
+      teamId: ludoTeamId,
+      playerId: ludoPlayerId,
+      pawnIndex,
+    });
+  };
+
+  const handleLudoNewRound = () => {
+    socketService.emit("ludo-new-round", { teamId: ludoTeamId });
+  };
+
   return (
     <div className="App">
       {/* Online Players Counter */}
@@ -179,23 +280,57 @@ function App() {
         onClose={() => setErrorMessage(null)}
       />
 
-      {gameState === "home" && (
-        <Home onCreateTeam={handleCreateTeam} onJoinTeam={handleJoinTeam} />
+      {/* Game Selection - First Screen */}
+      {!selectedGame && <GameSelection onSelectGame={handleSelectGame} />}
+
+      {/* Imposter Game Flow */}
+      {selectedGame === "imposter" && (
+        <>
+          {gameState === "home" && (
+            <Home onCreateTeam={handleCreateTeam} onJoinTeam={handleJoinTeam} />
+          )}
+
+          {gameState === "lobby" && (
+            <Lobby team={team} onStartGame={handleStartGame} />
+          )}
+
+          {gameState === "playing" && (
+            <Game
+              word={word}
+              isImposter={isImposter}
+              team={team}
+              onRevealVote={handleRevealVote}
+              revealProgress={revealProgress}
+              onNewRound={handleNewRound}
+            />
+          )}
+        </>
       )}
 
-      {gameState === "lobby" && (
-        <Lobby team={team} onStartGame={handleStartGame} />
-      )}
+      {/* Ludo Game Flow */}
+      {selectedGame === "ludo" && (
+        <>
+          {gameState === "home" && (
+            <LudoHome
+              onCreateTeam={handleLudoCreateTeam}
+              onJoinTeam={handleLudoJoinTeam}
+            />
+          )}
 
-      {gameState === "playing" && (
-        <Game
-          word={word}
-          isImposter={isImposter}
-          team={team}
-          onRevealVote={handleRevealVote}
-          revealProgress={revealProgress}
-          onNewRound={handleNewRound}
-        />
+          {gameState === "lobby" && (
+            <LudoLobby team={ludoTeam} onStartGame={handleLudoStartGame} />
+          )}
+
+          {gameState === "playing" && (
+            <LudoGame
+              team={ludoTeam}
+              playerId={ludoPlayerId}
+              onRollDice={handleLudoRollDice}
+              onMovePawn={handleLudoMovePawn}
+              onNewRound={handleLudoNewRound}
+            />
+          )}
+        </>
       )}
 
       {/* Developer Credit */}
