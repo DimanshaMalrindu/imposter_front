@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import VoiceChat from "./VoiceChat";
+import socketService from "../services/socketService";
 
 const FlipCard = ({ word, isImposter }) => {
   const [isFlipped, setIsFlipped] = useState(false);
@@ -37,6 +39,8 @@ const Game = ({
   word,
   isImposter,
   team,
+  playerId,
+  activeSpeakers,
   onRevealVote,
   revealProgress,
   onNewRound,
@@ -45,6 +49,9 @@ const Game = ({
   const revealedCount = revealProgress?.revealedCount || 0;
   const allRevealed =
     revealProgress?.totalPlayers === revealedCount && revealedCount > 0;
+
+  const socket = socketService.getSocket();
+  const teamId = team?.id;
 
   return (
     <div className="container">
@@ -112,6 +119,14 @@ const Game = ({
               : "Try to identify who doesn't know the word!"}
           </p>
         </motion.div>
+
+        <VoiceChat
+          socket={socket}
+          teamId={teamId}
+          playerId={playerId}
+          team={team}
+          activeSpeakers={activeSpeakers}
+        />
 
         <motion.div
           style={{ marginTop: "2rem" }}

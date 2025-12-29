@@ -1,0 +1,290 @@
+import React, { useState, useEffect, useRef } from "react";
+import { motion } from "framer-motion";
+
+const VoiceChat = ({ socket, teamId, playerId, team, activeSpeakers }) => {
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [localStream, setLocalStream] = useState(null);
+  const [peerConnections, setPeerConnections] = useState(new Map());
+  const audioRefs = useRef({});
+
+  // Get current player's name
+  const currentPlayer = team?.players.find((p) => p.id === playerId);
+  const currentPlayerName = currentPlayer?.name || "Unknown";
+
+  // Check if current player is speaking
+  const isCurrentPlayerSpeaking = activeSpeakers?.includes(playerId) || false;
+
+  // Get names of other speakers
+  const otherSpeakers =
+    team?.players
+      .filter((p) => activeSpeakers?.includes(p.id) && p.id !== playerId)
+      .map((p) => p.name) || [];
+  const hasOtherSpeakers = otherSpeakers.length > 0;
+
+  // Initialize microphone
+  const initMicrophone = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      setLocalStream(stream);
+      return stream;
+    } catch (error) {
+      console.error("Error accessing microphone:", error);
+      alert(
+        "Could not access microphone. Please allow microphone permissions."
+      );
+      return null;
+    }
+  };
+
+  // Create peer connection for WebRTC
+  const createPeerConnection = (targetSocketId) => {
+    const configuration = {
+      iceServers: [
+        { urls: "stun:stun.l.google.com:19302" },
+        { urls: "stun:stun1.l.google.com:19302" },
+      ],
+    };
+
+    const pc = new RTCPeerConnection(configuration);
+
+    // Add local stream tracks to peer connection
+    if (localStream) {
+      localStream.getTracks().forEach((track) => {
+        pc.addTrack(track, localStream);
+      });
+    }
+
+    // Handle incoming tracks
+    pc.ontrack = (event) => {
+      const [remoteStream] = event.streams;
+      if (audioRefs.current[targetSocketId]) {
+        audioRefs.current[targetSocketId].srcObject = remoteStream;
+      }
+    };
+
+    // Handle ICE candidates
+    pc.onicecandidate = (event) => {
+      if (event.candidate) {
+        socket.emit("voice-ice-candidate", {
+          teamId,
+          candidate: event.candidate,
+          targetSocketId,
+        });
+      }
+    };
+
+    return pc;
+  };
+
+  // Toggle microphone on/off
+  const toggleMicrophone = async () => {
+    // If currently speaking, turn off the mic
+    if (isCurrentPlayerSpeaking) {
+      setIsSpeaking(false);
+      socket.emit("stop-speaking", { teamId, playerId });
+
+      // Close all peer connections
+      peerConnections.forEach((pc) => pc.close());
+      setPeerConnections(new Map());
+    } else {
+      // Turn on the mic
+      const stream = localStream || (await initMicrophone());
+      if (!stream) return;
+
+      setIsSpeaking(true);
+      socket.emit("start-speaking", { teamId, playerId });
+
+      // Create peer connections with all other players
+      const otherPlayers = team.players.filter((p) => p.id !== playerId);
+      for (const player of otherPlayers) {
+        const pc = createPeerConnection(player.socketId);
+        peerConnections.set(player.socketId, pc);
+
+        // Create and send offer
+        const offer = await pc.createOffer();
+        await pc.setLocalDescription(offer);
+        socket.emit("voice-offer", {
+          teamId,
+          offer,
+          targetSocketId: player.socketId,
+        });
+      }
+    }
+  };
+
+  // Handle WebRTC signaling
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleVoiceOffer = async ({ offer, senderSocketId }) => {
+      const pc = createPeerConnection(senderSocketId);
+      peerConnections.set(senderSocketId, pc);
+
+      await pc.setRemoteDescription(new RTCSessionDescription(offer));
+      const answer = await pc.createAnswer();
+      await pc.setLocalDescription(answer);
+
+      socket.emit("voice-answer", {
+        teamId,
+        answer,
+        targetSocketId: senderSocketId,
+      });
+    };
+
+    const handleVoiceAnswer = async ({ answer, senderSocketId }) => {
+      const pc = peerConnections.get(senderSocketId);
+      if (pc) {
+        await pc.setRemoteDescription(new RTCSessionDescription(answer));
+      }
+    };
+
+    const handleIceCandidate = async ({ candidate, senderSocketId }) => {
+      const pc = peerConnections.get(senderSocketId);
+      if (pc) {
+        await pc.addIceCandidate(new RTCIceCandidate(candidate));
+      }
+    };
+
+    socket.on("voice-offer", handleVoiceOffer);
+    socket.on("voice-answer", handleVoiceAnswer);
+    socket.on("voice-ice-candidate", handleIceCandidate);
+
+    return () => {
+      socket.off("voice-offer", handleVoiceOffer);
+      socket.off("voice-answer", handleVoiceAnswer);
+      socket.off("voice-ice-candidate", handleIceCandidate);
+    };
+  }, [socket, teamId, localStream, peerConnections]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (localStream) {
+        localStream.getTracks().forEach((track) => track.stop());
+      }
+      peerConnections.forEach((pc) => pc.close());
+    };
+  }, []);
+
+  return (
+    <motion.div
+      style={{
+        marginTop: "1.5rem",
+        padding: "1.5rem",
+        background: "rgba(99, 102, 241, 0.1)",
+        borderRadius: "12px",
+        border: "1px solid rgba(99, 102, 241, 0.3)",
+      }}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.5 }}
+    >
+      <div style={{ textAlign: "center" }}>
+        <h3
+          style={{
+            marginBottom: "1rem",
+            color: "var(--text-secondary)",
+            fontSize: "1.1rem",
+          }}
+        >
+          🎙️ Voice Chat
+        </h3>
+
+        <motion.button
+          className="btn btn-primary"
+          style={{
+            width: "100%",
+            padding: "1.5rem",
+            fontSize: "1.2rem",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "0.5rem",
+            background: isCurrentPlayerSpeaking
+              ? "linear-gradient(135deg, #ef4444, #dc2626)"
+              : "linear-gradient(135deg, #6366f1, #4f46e5)",
+            cursor: "pointer",
+            userSelect: "none",
+          }}
+          onClick={toggleMicrophone}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          animate={
+            isCurrentPlayerSpeaking
+              ? {
+                  boxShadow: [
+                    "0 10px 30px rgba(239, 68, 68, 0.3)",
+                    "0 15px 40px rgba(239, 68, 68, 0.6)",
+                    "0 10px 30px rgba(239, 68, 68, 0.3)",
+                  ],
+                }
+              : {}
+          }
+          transition={{
+            duration: 1,
+            repeat: isCurrentPlayerSpeaking ? Infinity : 0,
+          }}
+        >
+          <span style={{ fontSize: "2rem" }}>
+            {isCurrentPlayerSpeaking ? "🔴" : "🎤"}
+          </span>
+          <span>{isCurrentPlayerSpeaking ? "Mic ON" : "Mic OFF"}</span>
+        </motion.button>
+
+        {hasOtherSpeakers && (
+          <motion.div
+            style={{
+              marginTop: "1rem",
+              padding: "1rem",
+              background: "rgba(16, 185, 129, 0.1)",
+              borderRadius: "8px",
+              border: "1px solid rgba(16, 185, 129, 0.3)",
+            }}
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+          >
+            <div style={{ fontSize: "1.5rem", marginBottom: "0.5rem" }}>🔊</div>
+            <p
+              style={{
+                color: "var(--success-color)",
+                fontSize: "0.9rem",
+                margin: 0,
+              }}
+            >
+              <strong>{otherSpeakers.join(", ")}</strong>{" "}
+              {otherSpeakers.length === 1 ? "is" : "are"} speaking
+            </p>
+          </motion.div>
+        )}
+
+        <p
+          style={{
+            marginTop: "1rem",
+            color: "var(--text-secondary)",
+            fontSize: "0.85rem",
+          }}
+        >
+          {isCurrentPlayerSpeaking
+            ? "Click to turn off microphone"
+            : "Click to turn on microphone"}
+        </p>
+      </div>
+
+      {/* Hidden audio elements for remote streams */}
+      {team?.players
+        .filter((p) => p.id !== playerId)
+        .map((player) => (
+          <audio
+            key={player.socketId}
+            ref={(el) => {
+              if (el) audioRefs.current[player.socketId] = el;
+            }}
+            autoPlay
+            style={{ display: "none" }}
+          />
+        ))}
+    </motion.div>
+  );
+};
+
+export default VoiceChat;

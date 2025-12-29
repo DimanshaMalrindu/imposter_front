@@ -26,6 +26,7 @@ function App() {
     totalPlayers: 0,
   });
   const [showReveal, setShowReveal] = useState(false);
+  const [activeSpeakers, setActiveSpeakers] = useState([]); // Track all active speakers
 
   // Ludo game state
   const [ludoTeamId, setLudoTeamId] = useState(null);
@@ -114,6 +115,12 @@ function App() {
       setIsImposter(false);
       setRevealProgress({ revealedCount: 0, totalPlayers: 0 });
       setShowReveal(false);
+      setActiveSpeakers([]);
+    });
+
+    // Voice chat events
+    socket.on("active-speakers-updated", (data) => {
+      setActiveSpeakers(data.activeSpeakers);
     });
 
     // Error handling
@@ -299,6 +306,8 @@ function App() {
               word={word}
               isImposter={isImposter}
               team={team}
+              playerId={playerId}
+              activeSpeakers={activeSpeakers}
               onRevealVote={handleRevealVote}
               revealProgress={revealProgress}
               onNewRound={handleNewRound}
