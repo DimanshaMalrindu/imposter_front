@@ -1,11 +1,47 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 
+// Sound wave component
+const SoundWave = () => {
+  return (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: "4px",
+        height: "40px",
+      }}
+    >
+      {[0, 1, 2, 3, 4].map((i) => (
+        <motion.div
+          key={i}
+          style={{
+            width: "4px",
+            background: "linear-gradient(180deg, #10b981, #059669)",
+            borderRadius: "2px",
+          }}
+          animate={{
+            height: ["20px", "40px", "15px", "35px", "20px"],
+          }}
+          transition={{
+            duration: 1,
+            repeat: Infinity,
+            delay: i * 0.1,
+            ease: "easeInOut",
+          }}
+        />
+      ))}
+    </div>
+  );
+};
+
 const VoiceChat = ({ socket, teamId, playerId, team, activeSpeakers }) => {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [localStream, setLocalStream] = useState(null);
-  const [peerConnections, setPeerConnections] = useState(new Map());
+  const peerConnectionsRef = useRef(new Map());
   const audioRefs = useRef({});
+  const localStreamRef = useRef(null);
 
   // Get current player's name
   const currentPlayer = team?.players.find((p) => p.id === playerId);
@@ -26,6 +62,7 @@ const VoiceChat = ({ socket, teamId, playerId, team, activeSpeakers }) => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       setLocalStream(stream);
+      localStreamRef.current = stream;
       return stream;
     } catch (error) {
       console.error("Error accessing microphone:", error);
@@ -37,7 +74,7 @@ const VoiceChat = ({ socket, teamId, playerId, team, activeSpeakers }) => {
   };
 
   // Create peer connection for WebRTC
-  const createPeerConnection = (targetSocketId) => {
+  const createPeerConnection = (targetSocketId, stream) => {
     const configuration = {
       iceServers: [
         { urls: "stun:stun.l.google.com:19302" },
@@ -48,17 +85,23 @@ const VoiceChat = ({ socket, teamId, playerId, team, activeSpeakers }) => {
     const pc = new RTCPeerConnection(configuration);
 
     // Add local stream tracks to peer connection
-    if (localStream) {
-      localStream.getTracks().forEach((track) => {
-        pc.addTrack(track, localStream);
+    const audioStream = stream || localStreamRef.current;
+    if (audioStream) {
+      audioStream.getTracks().forEach((track) => {
+        pc.addTrack(track, audioStream);
       });
     }
 
     // Handle incoming tracks
     pc.ontrack = (event) => {
       const [remoteStream] = event.streams;
+      console.log("Received remote stream from:", targetSocketId);
       if (audioRefs.current[targetSocketId]) {
         audioRefs.current[targetSocketId].srcObject = remoteStream;
+        // Ensure audio plays
+        audioRefs.current[targetSocketId].play().catch((e) => {
+          console.error("Error playing audio:", e);
+        });
       }
     };
 
@@ -73,6 +116,14 @@ const VoiceChat = ({ socket, teamId, playerId, team, activeSpeakers }) => {
       }
     };
 
+    // Log connection state changes
+    pc.onconnectionstatechange = () => {
+      console.log(
+        `Connection state with ${targetSocketId}:`,
+        pc.connectionState
+      );
+    };
+
     return pc;
   };
 
@@ -84,11 +135,11 @@ const VoiceChat = ({ socket, teamId, playerId, team, activeSpeakers }) => {
       socket.emit("stop-speaking", { teamId, playerId });
 
       // Close all peer connections
-      peerConnections.forEach((pc) => pc.close());
-      setPeerConnections(new Map());
+      peerConnectionsRef.current.forEach((pc) => pc.close());
+      peerConnectionsRef.current.clear();
     } else {
       // Turn on the mic
-      const stream = localStream || (await initMicrophone());
+      const stream = localStreamRef.current || (await initMicrophone());
       if (!stream) return;
 
       setIsSpeaking(true);
@@ -97,8 +148,8 @@ const VoiceChat = ({ socket, teamId, playerId, team, activeSpeakers }) => {
       // Create peer connections with all other players
       const otherPlayers = team.players.filter((p) => p.id !== playerId);
       for (const player of otherPlayers) {
-        const pc = createPeerConnection(player.socketId);
-        peerConnections.set(player.socketId, pc);
+        const pc = createPeerConnection(player.socketId, stream);
+        peerConnectionsRef.current.set(player.socketId, pc);
 
         // Create and send offer
         const offer = await pc.createOffer();
@@ -117,8 +168,15 @@ const VoiceChat = ({ socket, teamId, playerId, team, activeSpeakers }) => {
     if (!socket) return;
 
     const handleVoiceOffer = async ({ offer, senderSocketId }) => {
-      const pc = createPeerConnection(senderSocketId);
-      peerConnections.set(senderSocketId, pc);
+      // Make sure we have a local stream before responding
+      const stream = localStreamRef.current || (await initMicrophone());
+      if (!stream) {
+        console.error("No local stream available to answer offer");
+        return;
+      }
+
+      const pc = createPeerConnection(senderSocketId, stream);
+      peerConnectionsRef.current.set(senderSocketId, pc);
 
       await pc.setRemoteDescription(new RTCSessionDescription(offer));
       const answer = await pc.createAnswer();
@@ -132,14 +190,14 @@ const VoiceChat = ({ socket, teamId, playerId, team, activeSpeakers }) => {
     };
 
     const handleVoiceAnswer = async ({ answer, senderSocketId }) => {
-      const pc = peerConnections.get(senderSocketId);
+      const pc = peerConnectionsRef.current.get(senderSocketId);
       if (pc) {
         await pc.setRemoteDescription(new RTCSessionDescription(answer));
       }
     };
 
     const handleIceCandidate = async ({ candidate, senderSocketId }) => {
-      const pc = peerConnections.get(senderSocketId);
+      const pc = peerConnectionsRef.current.get(senderSocketId);
       if (pc) {
         await pc.addIceCandidate(new RTCIceCandidate(candidate));
       }
@@ -154,15 +212,16 @@ const VoiceChat = ({ socket, teamId, playerId, team, activeSpeakers }) => {
       socket.off("voice-answer", handleVoiceAnswer);
       socket.off("voice-ice-candidate", handleIceCandidate);
     };
-  }, [socket, teamId, localStream, peerConnections]);
+  }, [socket, teamId]);
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      if (localStream) {
-        localStream.getTracks().forEach((track) => track.stop());
+      if (localStreamRef.current) {
+        localStreamRef.current.getTracks().forEach((track) => track.stop());
       }
-      peerConnections.forEach((pc) => pc.close());
+      peerConnectionsRef.current.forEach((pc) => pc.close());
+      peerConnectionsRef.current.clear();
     };
   }, []);
 
@@ -239,11 +298,15 @@ const VoiceChat = ({ socket, teamId, playerId, team, activeSpeakers }) => {
               background: "rgba(16, 185, 129, 0.1)",
               borderRadius: "8px",
               border: "1px solid rgba(16, 185, 129, 0.3)",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: "0.75rem",
             }}
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
           >
-            <div style={{ fontSize: "1.5rem", marginBottom: "0.5rem" }}>🔊</div>
+            <SoundWave />
             <p
               style={{
                 color: "var(--success-color)",
