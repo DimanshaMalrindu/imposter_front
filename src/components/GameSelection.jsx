@@ -179,7 +179,7 @@ const GameSelection = ({ onSelectGame }) => {
               >
                 {game.status}
               </div>
-              {game.status === "Coming soon" && game.launchDate && (
+              {game.status === "Coming Soon" && game.launchDate && (
                 <CountdownTimer targetDate={game.launchDate} />
               )}
             </motion.div>
