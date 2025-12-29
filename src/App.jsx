@@ -189,6 +189,9 @@ function App() {
           onNewRound={handleNewRound}
         />
       )}
+
+      {/* Developer Credit */}
+      <div className="developer-credit">Developed by Dima</div>
     </div>
   );
 }

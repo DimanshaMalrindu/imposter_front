@@ -506,3 +506,21 @@ body {
     transform: translateY(0);
   }
 }
+
+/* Developer Credit */
+.developer-credit {
+  position: fixed;
+  bottom: 15px;
+  right: 20px;
+  font-size: 0.85rem;
+  color: rgba(248, 250, 252, 0.5);
+  font-weight: 500;
+  z-index: 999;
+  letter-spacing: 0.5px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  transition: color 0.3s ease;
+}
+
+.developer-credit:hover {
+  color: rgba(248, 250, 252, 0.8);
+}
