@@ -266,6 +266,43 @@ const VoiceChat = ({
     init();
   }, []);
 
+  // Handle page visibility changes (for mobile - release mic when app is backgrounded)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        // Page is hidden (app went to background)
+        console.log("Page hidden - releasing microphone");
+        if (localStreamRef.current) {
+          localStreamRef.current.getTracks().forEach((track) => track.stop());
+          localStreamRef.current = null;
+          setLocalStream(null);
+        }
+        // Close peer connections to clean up resources
+        peerConnectionsRef.current.forEach((pc) => pc.close());
+        peerConnectionsRef.current.clear();
+      } else {
+        // Page is visible again (app came to foreground)
+        console.log("Page visible - reinitializing microphone");
+        const reinit = async () => {
+          const stream = await initMicrophone();
+          if (stream) {
+            // Keep microphone muted by default
+            stream.getAudioTracks().forEach((track) => {
+              track.enabled = false;
+            });
+          }
+        };
+        reinit();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, []);
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
